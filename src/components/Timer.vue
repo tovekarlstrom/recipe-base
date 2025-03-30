@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
-
+import { useTimerStore } from '@/stores/timer'
 defineOptions({
   name: 'RecipeTimer',
 })
@@ -15,6 +15,30 @@ const minutes = ref(props.initialMinutes || 0)
 const seconds = ref(props.initialSeconds || 0)
 const isRunning = ref(false)
 const intervalId = ref<ReturnType<typeof setInterval> | null>(null)
+const timerStore = useTimerStore()
+
+// Initialize timer when component is mounted
+onMounted(() => {
+  console.log('Timer component mounted with props:', {
+    initialMinutes: props.initialMinutes,
+    initialSeconds: props.initialSeconds,
+  })
+  if (props.initialMinutes !== undefined && props.initialSeconds !== undefined) {
+    setTime(props.initialMinutes, props.initialSeconds)
+  }
+})
+
+// Watch for prop changes to update the timer
+watch(
+  () => [props.initialMinutes, props.initialSeconds],
+  ([newMinutes, newSeconds]) => {
+    console.log('Timer props updated:', { newMinutes, newSeconds })
+    if (newMinutes !== undefined && newSeconds !== undefined) {
+      setTime(newMinutes, newSeconds)
+    }
+  },
+  { immediate: true },
+)
 
 const displayTime = computed(() => {
   const paddedMinutes = minutes.value.toString().padStart(2, '0')
@@ -73,9 +97,20 @@ function stopTimer() {
 
 // External control methods
 function setTime(newMinutes: number, newSeconds: number = 0) {
+  console.log('Setting time:', { newMinutes, newSeconds })
   pauseTimer()
   minutes.value = newMinutes
   seconds.value = newSeconds
+  // Start the timer automatically when time is set
+  if (newMinutes > 0 || newSeconds > 0) {
+    startTimer()
+  }
+}
+
+function closeTimer() {
+  console.log('Closing timer')
+  timerStore.hideTimer()
+  stopTimer()
 }
 
 // Expose methods for external use
@@ -107,10 +142,26 @@ watch(
     }
   },
 )
+
+// Watch for store changes
+watch(
+  () => timerStore.showTimer,
+  (newValue) => {
+    console.log('Timer visibility changed:', newValue)
+    if (!newValue) {
+      stopTimer()
+    }
+  },
+)
 </script>
 
 <template>
-  <div class="bg-gray-700 rounded-2xl p-6 max-w-xs mx-auto">
+  <div v-if="timerStore.showTimer" class="bg-gray-700 rounded-2xl p-6 max-w-xs mx-auto">
+    <div class="flex justify-between items-center mb-6">
+      <Icon icon="mdi:timer-outline" class="w-6 h-6" />
+      <Icon icon="mdi:close" class="w-6 h-6" @click="closeTimer" />
+    </div>
+
     <div class="text-center mb-6">
       <div class="relative inline-block">
         <!-- Circular progress -->

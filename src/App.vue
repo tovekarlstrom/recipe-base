@@ -1,12 +1,54 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { RouterView } from 'vue-router'
 import { useRecipesStore } from '@/stores/recipes'
 import ChatField from '@/components/ChatField.vue'
 import ChatBubble from '@/components/ChatBubble.vue'
+import RecipeTimer from '@/components/Timer.vue'
+import { useTimerStore } from '@/stores/timer'
+import { initializeTimerStore } from '@/services/timer'
 
 const { prefetchRecipes } = useRecipesStore()
+const timerStore = useTimerStore()
 const isChatOpen = ref(false)
+const timerRef = ref<InstanceType<typeof RecipeTimer> | null>(null)
+
+// Initialize the timer service with the store
+onMounted(() => {
+  console.log('App: Initializing timer store')
+  initializeTimerStore(timerStore)
+})
+
+onMounted(() => {
+  console.log('showTimer', timerStore.showTimer)
+})
+
+// Watch for timer state changes
+watch(
+  () => timerStore.showTimer,
+  (newValue) => {
+    console.log('App: Timer visibility changed:', newValue)
+    if (newValue && timerRef.value) {
+      console.log('App: Timer component reference:', timerRef.value)
+      // Ensure the timer is properly initialized with the current duration
+      const minutes = Math.floor(timerStore.timerDuration / 60)
+      const seconds = timerStore.timerDuration % 60
+      console.log('App: Setting timer duration:', { minutes, seconds })
+      timerRef.value.setTime(minutes, seconds)
+    }
+  },
+)
+
+watch(
+  () => timerStore.timerDuration,
+  (newValue) => {
+    console.log('App: Timer duration changed:', newValue)
+    if (newValue > 0 && timerRef.value) {
+      console.log('App: Setting timer duration on component')
+      timerRef.value.setTime(Math.floor(newValue / 60), newValue % 60)
+    }
+  },
+)
 
 function handleChatOpen() {
   isChatOpen.value = !isChatOpen.value
@@ -26,4 +68,25 @@ onMounted(async () => {
   <div class="fixed bottom-4 right-4">
     <ChatBubble @openChat="handleChatOpen" />
   </div>
+  <Transition name="fade">
+    <div v-if="timerStore.showTimer" class="fixed bottom-4 left-4 z-50">
+      <RecipeTimer
+        ref="timerRef"
+        :initial-minutes="Math.floor(timerStore.timerDuration / 60)"
+        :initial-seconds="timerStore.timerDuration % 60"
+      />
+    </div>
+  </Transition>
 </template>
+
+<style>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

@@ -28,7 +28,7 @@ interface SearchResult {
 export async function searchRecipesByText(
   query: string,
   matchThreshold = 0.6,
-  matchCount = 5,
+  matchCount = 7,
 ): Promise<SearchResult[]> {
   try {
     console.log('Generating embedding for search query')

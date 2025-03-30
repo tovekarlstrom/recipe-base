@@ -2,13 +2,11 @@
 import { ref } from 'vue'
 import AddRecipe from '@/components/AddRecipe.vue'
 import RecipeList from '@/components/RecipeList.vue'
-import RecipeTimer from '@/components/Timer.vue'
 import ButtonComponent from '@/components/ButtonComponent.vue'
 import BaseModal from '@/components/BaseModal.vue'
 
 const isAddRecipeOpen = ref(false)
 const isViewRecipesOpen = ref(false)
-const timerRef = ref<InstanceType<typeof RecipeTimer> | null>(null)
 
 function openModalAddRecipe() {
   console.log('openModalAddRecipe')
@@ -120,10 +118,5 @@ function openModalViewRecipes() {
     <BaseModal :is-open="isViewRecipesOpen" @close="openModalViewRecipes">
       <RecipeList />
     </BaseModal>
-
-    <!-- Timer (moved to bottom) -->
-    <div class="fixed bottom-4 left-4">
-      <RecipeTimer ref="timerRef" :initial-minutes="5" :initial-seconds="0" />
-    </div>
   </main>
 </template>
