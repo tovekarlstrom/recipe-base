@@ -54,7 +54,7 @@ const sendMessage = async () => {
     console.error('Error sending message:', error)
     messages.value.push({
       role: 'assistant',
-      content: 'I apologize, but I encountered an error. Could you please try again?',
+      content: 'Jag beklagar, men jag stötte på ett fel. Kan du försöka igen?',
       timestamp: new Date(),
     })
   } finally {
@@ -97,7 +97,7 @@ const handleRecipeClick = async (recipe: Recipe) => {
   <div class="flex flex-col h-full bg-gray-800 rounded-2xl">
     <!-- Chat Header -->
     <div class="p-4 border-b border-gray-700">
-      <h2 class="text-xl font-bold text-white">Chat with Co-Chef</h2>
+      <h2 class="text-xl font-bold text-white">Chatta med Co-Chef</h2>
     </div>
 
     <!-- Chat Messages -->
@@ -128,8 +128,8 @@ const handleRecipeClick = async (recipe: Recipe) => {
                 {{ recipe.description }}
               </p>
               <div class="flex gap-4 text-xs text-gray-400 mt-2">
-                <span>{{ recipe.ingredients.length }} ingredients</span>
-                <span>{{ recipe.instructions.length }} steps</span>
+                <span>{{ recipe.ingredients.length }} ingredienser</span>
+                <span>{{ recipe.instructions.length }} steg</span>
               </div>
             </div>
           </div>
@@ -160,7 +160,7 @@ const handleRecipeClick = async (recipe: Recipe) => {
         <textarea
           v-model="userInput"
           @keypress="handleKeyPress"
-          placeholder="Type your message..."
+          placeholder="Skriv ditt meddelande..."
           class="flex-1 bg-gray-700 text-white rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400 resize-none"
           rows="1"
         ></textarea>

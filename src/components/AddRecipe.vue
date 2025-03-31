@@ -39,7 +39,7 @@ async function handleSubmit() {
     ingredients.value.some((i) => !i.ingredient) ||
     instructions.value.some((i) => !i.text)
   ) {
-    alert('Please fill in all required fields')
+    alert('Vänligen fyll i alla obligatoriska fält')
     return
   }
 
@@ -57,7 +57,7 @@ async function handleSubmit() {
       instructions: instructions.value.map((i) => ({ step_number: i.step, instruction: i.text })),
     })
 
-    alert('Recipe added successfully!')
+    alert('Receptet har lagts till!')
     // Reset form
     recipeName.value = ''
     description.value = ''
@@ -66,7 +66,7 @@ async function handleSubmit() {
     instructions.value = [{ step: 1, text: '' }]
   } catch (error) {
     console.error('Error adding recipe:', error)
-    alert('Failed to add recipe. Please try again.')
+    alert('Det gick inte att lägga till receptet. Vänligen försök igen.')
   } finally {
     isSubmitting.value = false
   }
@@ -75,35 +75,33 @@ async function handleSubmit() {
 
 <template>
   <div class="flex flex-col w-full text-left">
-    <h2 class="text-2xl font-bold text-white mb-6">Add New Recipe</h2>
+    <h2 class="text-2xl font-bold text-white mb-6">Lägg till nytt recept</h2>
 
     <form @submit.prevent="handleSubmit" class="space-y-6">
       <div>
-        <label for="recipeName" class="block text-gray-300 mb-2 font-medium">Recipe Name</label>
+        <label for="recipeName" class="block text-gray-300 mb-2 font-medium">Receptnamn</label>
         <input
           v-model="recipeName"
           type="text"
           id="recipeName"
           class="w-full bg-gray-600 text-white rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-300"
-          placeholder="Enter recipe name"
+          placeholder="Ange receptnamn"
           required
         />
       </div>
       <div>
-        <label for="description" class="block text-gray-300 mb-2 font-medium">Description</label>
+        <label for="description" class="block text-gray-300 mb-2 font-medium">Beskrivning</label>
         <input
           v-model="description"
           type="text"
           id="description"
           class="w-full bg-gray-600 text-white rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-300"
-          placeholder="Enter description"
+          placeholder="Ange beskrivning"
           required
         />
       </div>
       <div>
-        <label for="servings" class="block text-gray-300 mb-2 font-medium"
-          >Number of Servings</label
-        >
+        <label for="servings" class="block text-gray-300 mb-2 font-medium">Antal portioner</label>
         <input
           v-model.number="servings"
           type="number"
@@ -115,25 +113,25 @@ async function handleSubmit() {
       </div>
 
       <div class="space-y-3">
-        <label class="block text-gray-300 font-medium">Ingredients</label>
+        <label class="block text-gray-300 font-medium">Ingredienser</label>
         <div v-for="(ingredient, index) in ingredients" :key="index" class="flex gap-2">
           <input
             v-model="ingredient.amount"
             type="text"
             class="w-24 bg-gray-600 text-white rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-300"
-            placeholder="Amount"
+            placeholder="Mängd"
           />
           <input
             v-model="ingredient.unit"
             type="text"
             class="w-24 bg-gray-600 text-white rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-300"
-            placeholder="Unit"
+            placeholder="Enhet"
           />
           <input
             v-model="ingredient.ingredient"
             type="text"
             class="flex-1 bg-gray-600 text-white rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-300"
-            placeholder="Ingredient name"
+            placeholder="Ingrediensnamn"
             required
           />
           <button
@@ -164,12 +162,12 @@ async function handleSubmit() {
               d="M12 4v16m8-8H4"
             />
           </svg>
-          <span>Add Ingredient</span>
+          <span>Lägg till ingrediens</span>
         </button>
       </div>
 
       <div class="space-y-3">
-        <label class="block text-gray-300 font-medium">Instructions</label>
+        <label class="block text-gray-300 font-medium">Instruktioner</label>
         <div
           v-for="(instruction, index) in instructions"
           :key="index"
@@ -184,7 +182,7 @@ async function handleSubmit() {
             v-model="instruction.text"
             type="text"
             class="flex-1 bg-gray-600 text-white rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-300"
-            placeholder="Step instruction"
+            placeholder="Steg"
             required
           />
           <button
@@ -215,7 +213,7 @@ async function handleSubmit() {
               d="M12 4v16m8-8H4"
             />
           </svg>
-          <span>Add Step</span>
+          <span>Lägg till steg</span>
         </button>
       </div>
 
@@ -225,7 +223,7 @@ async function handleSubmit() {
           :disabled="isSubmitting"
           class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
         >
-          {{ isSubmitting ? 'Adding Recipe...' : 'Add Recipe' }}
+          {{ isSubmitting ? 'Lägger till recept...' : 'Lägg till recept' }}
         </button>
       </div>
     </form>

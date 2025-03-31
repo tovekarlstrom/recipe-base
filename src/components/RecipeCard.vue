@@ -45,12 +45,12 @@ const formattedDate = computed(() => {
     <p v-if="recipe.description" class="text-gray-300 mb-4">{{ recipe.description }}</p>
 
     <div class="flex items-center gap-2 mb-4">
-      <span class="text-gray-400">Servings:</span>
+      <span class="text-gray-400">Portioner:</span>
       <span class="text-white">{{ recipe.servings }}</span>
     </div>
 
     <div class="mb-4">
-      <h4 class="text-white font-semibold mb-2">Ingredients</h4>
+      <h4 class="text-white font-semibold mb-2">Ingredienser</h4>
       <ul class="space-y-1">
         <li
           v-for="(ingredient, index) in recipe.recipe_ingredients"
@@ -63,7 +63,7 @@ const formattedDate = computed(() => {
     </div>
 
     <div>
-      <h4 class="text-white font-semibold mb-2">Instructions</h4>
+      <h4 class="text-white font-semibold mb-2">Instruktioner</h4>
       <ol class="space-y-2">
         <li
           v-for="instruction in recipe.recipe_instructions"

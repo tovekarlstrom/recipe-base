@@ -112,7 +112,7 @@ onMounted(() => {
     <div class="bg-gray-800 rounded-2xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
       <!-- Header -->
       <div class="flex justify-between items-center mb-8">
-        <h2 class="text-2xl font-bold text-white">Cooking Session</h2>
+        <h2 class="text-2xl font-bold text-white">Koksession</h2>
         <button @click="closeSession" class="text-gray-400 hover:text-white transition-colors">
           <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
@@ -130,7 +130,7 @@ onMounted(() => {
         <div
           class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"
         ></div>
-        <p class="text-gray-300">Generating detailed cooking steps...</p>
+        <p class="text-gray-300">Genererar detaljerade koksteg...</p>
       </div>
 
       <!-- Content -->
@@ -145,7 +145,7 @@ onMounted(() => {
             </div>
             <div class="flex-1">
               <div class="flex justify-between items-start mb-4">
-                <h3 class="text-xl font-semibold text-white">Current Step</h3>
+                <h3 class="text-xl font-semibold text-white">Nuvarande steg</h3>
                 <span v-if="detailedSteps[currentStep]?.estimatedTime" class="text-blue-400">
                   {{ detailedSteps[currentStep].estimatedTime }}
                 </span>

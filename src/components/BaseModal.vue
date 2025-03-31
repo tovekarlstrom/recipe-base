@@ -37,7 +37,7 @@ defineEmits<{
                 class="absolute right-4 top-4 rounded-lg p-2 text-gray-400 hover:text-white hover:bg-gray-700 transition-all duration-200"
                 @click="$emit('close')"
               >
-                <span class="sr-only">Close</span>
+                <span class="sr-only">Stäng</span>
                 <svg
                   class="h-5 w-5"
                   fill="none"

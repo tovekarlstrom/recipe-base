@@ -9,7 +9,7 @@ const { recipes, isLoading, error } = storeToRefs(store)
 
 <template>
   <div class="max-w-7xl mx-auto px-4 py-8">
-    <h2 class="text-3xl font-bold text-white mb-8">All Recipes</h2>
+    <h2 class="text-3xl font-bold text-white mb-8">Alla recept</h2>
 
     <div v-if="isLoading" class="flex justify-center items-center h-64">
       <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -20,7 +20,7 @@ const { recipes, isLoading, error } = storeToRefs(store)
     </div>
 
     <div v-else-if="recipes.length === 0" class="text-gray-400 text-center py-8">
-      No recipes found. Add your first recipe!
+      Inga recept hittades. Lägg till ditt första recept!
     </div>
 
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">

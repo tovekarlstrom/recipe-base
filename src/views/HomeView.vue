@@ -31,23 +31,23 @@ function openModalViewRecipes() {
       <!-- Content -->
       <div class="relative mx-auto max-w-7xl px-6 lg:px-8">
         <div class="mx-auto max-w-2xl text-center">
-          <h1 class="text-4xl font-bold tracking-tight text-white sm:text-6xl mb-4">Recipe Base</h1>
+          <h1 class="text-4xl font-bold tracking-tight text-white sm:text-6xl mb-4">ReceptBase</h1>
           <p class="text-lg leading-8 text-gray-300 mb-8">
-            Your digital cookbook for preserving and sharing cherished family recipes. Create,
-            discover, and keep your culinary heritage alive.
+            Din digitala kokbok för att bevara och dela dina älskade familjerecept. Skapa, upptäck
+            och håll din kulinariska arv vid liv.
           </p>
 
           <!-- Main Actions -->
           <div class="flex flex-col sm:flex-row items-center justify-center gap-6 mt-10">
             <ButtonComponent
-              text="Add Your Recipe"
+              text="Lägg till ditt recept"
               variant="primary"
               size="lg"
               class="w-full sm:w-auto transform hover:scale-105 transition-transform duration-200"
               @click="openModalAddRecipe"
             />
             <ButtonComponent
-              text="Explore Recipes"
+              text="Utforska recept"
               variant="secondary"
               size="lg"
               class="w-full sm:w-auto transform hover:scale-105 transition-transform duration-200"
@@ -68,9 +68,9 @@ function openModalViewRecipes() {
                   />
                 </svg>
               </div>
-              <h3 class="text-white font-semibold mb-2">Preserve Traditions</h3>
+              <h3 class="text-white font-semibold mb-2">Bevara traditioner</h3>
               <p class="text-gray-400 text-sm">
-                Keep your family recipes safe and organized for generations to come.
+                Håll dina familjerecept säkra och organiserade för kommande generationer.
               </p>
             </div>
             <div class="bg-gray-800/50 rounded-xl p-6 backdrop-blur-sm">
@@ -84,9 +84,9 @@ function openModalViewRecipes() {
                   />
                 </svg>
               </div>
-              <h3 class="text-white font-semibold mb-2">Smart Timer</h3>
+              <h3 class="text-white font-semibold mb-2">Smart timer</h3>
               <p class="text-gray-400 text-sm">
-                Built-in cooking timer to help you achieve perfect results every time.
+                Inbyggd kökstimer för att hjälpa dig uppnå perfekta resultat varje gång.
               </p>
             </div>
             <div class="bg-gray-800/50 rounded-xl p-6 backdrop-blur-sm">
@@ -100,10 +100,40 @@ function openModalViewRecipes() {
                   />
                 </svg>
               </div>
-              <h3 class="text-white font-semibold mb-2">Recipe Chat</h3>
+              <h3 class="text-white font-semibold mb-2">Receptchatt</h3>
               <p class="text-gray-400 text-sm">
-                Get instant help and share cooking tips with our AI-powered chat assistant.
+                Få omedelbar hjälp och dela koktips med vår AI-drivna chattassistent.
               </p>
+            </div>
+          </div>
+
+          <!-- AI Disclosure -->
+          <div
+            class="mt-16 bg-blue-900/30 border border-blue-500/30 rounded-xl p-4 mb-8 backdrop-blur-sm"
+          >
+            <div class="flex items-start gap-3">
+              <svg
+                class="w-5 h-5 text-blue-400 mt-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <div>
+                <h3 class="text-blue-400 font-semibold mb-1">AI-drivna funktioner</h3>
+                <p class="text-gray-300 text-sm">
+                  Denna applikation använder artificiell intelligens för att förbättra din
+                  kokupplevelse. Vår AI-assistent ger förslag och vägledning, men observera att allt
+                  AI-genererat innehåll bör noggrant granskas och verifieras av dig. Vi garanterar
+                  inte riktigheten, säkerheten eller pålitligheten av AI-genererat innehåll.
+                </p>
+              </div>
             </div>
           </div>
         </div>
