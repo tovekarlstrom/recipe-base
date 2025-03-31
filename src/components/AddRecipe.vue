@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { uploadTextToDatabase } from '@/functions/storeRecipes'
+import { useRecipesStore } from '@/stores/recipes'
 
 const recipeName = ref('')
 const description = ref('')
@@ -10,6 +11,9 @@ const ingredients = ref<{ ingredient: string; amount: string; unit: string }[]>(
 ])
 const instructions = ref<{ step: number; text: string }[]>([{ step: 1, text: '' }])
 const isSubmitting = ref(false)
+const recipesStore = useRecipesStore()
+
+const emit = defineEmits(['recipeAdded'])
 
 function addIngredient() {
   ingredients.value.push({ ingredient: '', amount: '', unit: '' })
@@ -57,6 +61,9 @@ async function handleSubmit() {
       instructions: instructions.value.map((i) => ({ step_number: i.step, instruction: i.text })),
     })
 
+    // Clear the recipes store to force a refresh
+    recipesStore.clearRecipes()
+
     alert('Receptet har lagts till!')
     // Reset form
     recipeName.value = ''
@@ -64,6 +71,9 @@ async function handleSubmit() {
     servings.value = 4
     ingredients.value = [{ ingredient: '', amount: '', unit: '' }]
     instructions.value = [{ step: 1, text: '' }]
+
+    // Emit event to notify parent
+    emit('recipeAdded')
   } catch (error) {
     console.error('Error adding recipe:', error)
     alert('Det gick inte att lägga till receptet. Vänligen försök igen.')

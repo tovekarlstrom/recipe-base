@@ -76,7 +76,7 @@ onMounted(() => {
   messages.value.push({
     role: 'assistant',
     content:
-      '👋 Hej! Jag är Gramz och jag kan hjälpa dig att utforska recept, skapa nya, och svara på alla kokningsfrågor du kanske har. Vad vill du laga idag?',
+      '👋 Hej! Jag är Gramz och jag kan hjälpa dig att utforska recept, skapa nya, och svara på alla frågor du har. Vad vill du laga idag?',
     timestamp: new Date(),
   })
 })

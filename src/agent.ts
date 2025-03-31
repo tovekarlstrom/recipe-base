@@ -4,6 +4,7 @@ import { uploadTextToDatabase } from './functions/storeRecipes'
 import type { Recipe } from './types/recipe'
 import { setTimer } from '@/services/timer'
 import { AGENT_PROMPTS } from './prompts/agentPrompts'
+import { useRecipesStore } from '@/stores/recipes'
 
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY)
@@ -179,6 +180,7 @@ export function useAgent() {
     functionCall: FunctionCall,
   ): Promise<FunctionResponse['response']> => {
     const { name, args } = functionCall
+    const recipesStore = useRecipesStore()
 
     switch (name) {
       case 'setTimer':
@@ -200,6 +202,9 @@ export function useAgent() {
         if (args.recipeData) {
           try {
             await uploadTextToDatabase(args.recipeData)
+            // Clear the recipes store and fetch new recipes
+            recipesStore.clearRecipes()
+            await recipesStore.fetchRecipes()
             return { success: true, message: 'Recipe stored successfully' }
           } catch (error) {
             console.error('Error storing recipe:', error)

@@ -4,9 +4,11 @@ import AddRecipe from '@/components/AddRecipe.vue'
 import RecipeList from '@/components/RecipeList.vue'
 import ButtonComponent from '@/components/ButtonComponent.vue'
 import BaseModal from '@/components/BaseModal.vue'
+import { useRecipesStore } from '@/stores/recipes'
 
 const isAddRecipeOpen = ref(false)
 const isViewRecipesOpen = ref(false)
+const recipesStore = useRecipesStore()
 
 function openModalAddRecipe() {
   console.log('openModalAddRecipe')
@@ -16,6 +18,13 @@ function openModalAddRecipe() {
 function openModalViewRecipes() {
   console.log('openModalViewRecipes')
   isViewRecipesOpen.value = !isViewRecipesOpen.value
+}
+
+async function handleRecipeAdded() {
+  // Refresh recipes
+  await recipesStore.fetchRecipes()
+  // Close the add recipe modal
+  isAddRecipeOpen.value = false
 }
 </script>
 
@@ -142,7 +151,7 @@ function openModalViewRecipes() {
 
     <!-- Modals -->
     <BaseModal :is-open="isAddRecipeOpen" @close="openModalAddRecipe">
-      <AddRecipe />
+      <AddRecipe @recipe-added="handleRecipeAdded" />
     </BaseModal>
 
     <BaseModal :is-open="isViewRecipesOpen" @close="openModalViewRecipes">
