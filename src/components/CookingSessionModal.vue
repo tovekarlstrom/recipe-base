@@ -112,7 +112,7 @@ onMounted(() => {
     <div class="bg-gray-800 rounded-2xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
       <!-- Header -->
       <div class="flex justify-between items-center mb-8">
-        <h2 class="text-2xl font-bold text-white">Koksession</h2>
+        <h2 class="text-2xl font-bold text-white">Tillagning</h2>
         <button @click="closeSession" class="text-gray-400 hover:text-white transition-colors">
           <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
@@ -130,7 +130,7 @@ onMounted(() => {
         <div
           class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"
         ></div>
-        <p class="text-gray-300">Genererar detaljerade koksteg...</p>
+        <p class="text-gray-300">Genererar detaljerade tillagningssteg...</p>
       </div>
 
       <!-- Content -->
@@ -219,17 +219,17 @@ onMounted(() => {
               :disabled="currentStep === 0"
               class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              Previous Step
+              Föregående steg
             </button>
             <span class="text-white">
-              Step {{ currentStep + 1 }} of {{ detailedSteps.length }}
+              Steg {{ currentStep + 1 }} av {{ detailedSteps.length }}
             </span>
             <button
               @click="nextStep"
               :disabled="currentStep === detailedSteps.length - 1"
               class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              Next Step
+              Nästa steg
             </button>
           </div>
         </div>

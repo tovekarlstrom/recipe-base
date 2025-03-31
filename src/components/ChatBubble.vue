@@ -4,7 +4,7 @@
     <span
       class="absolute right-14 bg-gray-700 text-white px-3 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap"
     >
-      fråga Gramz
+      Fråga Gramz
     </span>
 
     <!-- Icon bubble -->
