@@ -1,0 +1,29 @@
+RecipeBase
+
+Inledning
+
+Under denna uppgift kommer jag skapa en receptbas för att samla recept och möjliggöra att dela dem med familj och vänner. Applikationen använder ett agentiskt system för att underlätta för användaren under processens gång och har semantisk sökning med embeddings.
+
+Beskrivning av lösningen
+
+Applikationen fungerar som en digital receptbok där användaren kan spara recept som den inte vill glömma och även dela dem. Ett vanligt problem vid matlagning är att en ingrediens kan saknas eller att vissa instruktioner kan vara svåra att förstå. AI-funktionaliteten i RecipeBase hjälper användaren genom att besvara frågor, starta timers och till och med lägga till nya recept via en chattfunktion. Användaren kan även starta en “tillagning” där en ai har genererat en användarvänliga steg för steg guide för varje recept.
+
+RecipeBase är en webbapplikation byggd i Vue.js och använder Supabase för att spara recept och möjliggöra semantisk sökning med embeddings. De AI-modeller som används är Google Gemini 2.0 för chattfunktionen och Hugging Face-modellen "mixedbread-ai/mxbai-embed-large-v1" för embeddings. Dessa val gjordes eftersom modellerna är enkla att implementera och presterar bra för sitt ändamål.
+
+AI-agenten fungerar som en assistent som hjälper användaren genom hela applikationen. Användaren kan navigera via gränssnittet eller använda chattfunktionen för att uppnå samma resultat.
+
+Etiska överväganden
+
+Applikationen sparar ingen känslig data och hanterar främst frågor om mat och recept. Dock finns alltid risken att AI-agenten kan ge felaktiga svar. För att minimera detta har agenten utformats för att endast vägleda, inte övertyga. Gränssnittet visar tydligt att AI används.
+
+Implementering
+
+Applikationen byggdes med Vue.js och Supabase, där fokus låg på AI-funktionaliteten och semantisk sökning. Supabase används för att lagra embeddings. När en användare söker efter ett recept genereras embeddings från sökorden, som sedan matchas med de embeddings som lagrats för varje recept. Agenten använder en välskriven prompt och function calling för att interagera med användaren.
+
+Reflektion
+
+RecipeBase kan hjälpa till att minska matsvinn genom att ge tips på alternativa ingredienser och föreslå recept baserade på befintliga råvaror. Att skapa en välfungerande prompt för AI-agenten var en av de största utmaningarna. En förbättring hade varit att implementera ett minnessystem, så att agenten kunde komma ihåg användarens preferenser och behov. Genom att implementera minnesfunktionalitet skulle agenten kunna ge personliga rekommendationer, t.ex. föreslå alternativa instruktioner om användaren saknar viss köksutrustning
+
+Slutsats
+
+Det har varit ett lärorikt och spännande projekt där jag fått djupare insikter i AI-modellers implementering och hur en AI-agent kan integreras över flera delar av en applikation.
