@@ -47,3 +47,9 @@ VITE_GEMINI_API_KEY=your-gemini-api-key
 # Hugging Face Configuration
 VITE_HF_ACCESS_TOKEN=your-huggingface-token
 ```
+
+4. Start the development server:
+
+```bash
+npm run dev
+```
