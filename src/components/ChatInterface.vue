@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick } from 'vue'
 import { Icon } from '@iconify/vue'
-import { Agent } from '@/agent'
+import { useAgent } from '@/agent'
 import type { Recipe } from '@/types/recipe'
 import router from '@/router'
 
@@ -14,7 +14,7 @@ interface Message {
 
 const emit = defineEmits(['closeChat'])
 
-const agent = new Agent()
+const { chatWithUser } = useAgent()
 const messages = ref<Message[]>([])
 const userInput = ref('')
 const isLoading = ref(false)
@@ -43,7 +43,7 @@ const sendMessage = async () => {
   isLoading.value = true
 
   try {
-    const response = await agent.chatWithUser(userMessage)
+    const response = await chatWithUser(userMessage)
     messages.value.push({
       role: 'assistant',
       content: response.text,

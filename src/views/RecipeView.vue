@@ -3,14 +3,14 @@ import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useRecipesStore } from '@/stores/recipes'
 import type { Recipe } from '@/stores/recipes'
+import CookingSessionModal from '@/components/CookingSessionModal.vue'
 
 const route = useRoute()
 const router = useRouter()
 const recipeId = route.params.id
 const recipe = ref<Recipe | null>(null)
 const { getRecipe, error } = useRecipesStore()
-const isCookingSession = ref(false)
-const currentStep = ref(0)
+const isCookingSessionOpen = ref(false)
 
 onMounted(async () => {
   recipe.value = await getRecipe(recipeId as string)
@@ -18,29 +18,16 @@ onMounted(async () => {
 })
 
 function startCookingSession() {
-  isCookingSession.value = true
-  currentStep.value = 0
+  isCookingSessionOpen.value = true
 }
 
-function nextStep() {
-  if (recipe.value && currentStep.value < recipe.value.recipe_instructions.length - 1) {
-    currentStep.value++
-  }
-}
-
-function previousStep() {
-  if (currentStep.value > 0) {
-    currentStep.value--
-  }
-}
-
-function endCookingSession() {
-  isCookingSession.value = false
+function closeCookingSession() {
+  isCookingSessionOpen.value = false
 }
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-900">
+  <div class="min-h-screen bg-gradient-to-b from-black-900 via-black-900/80 to-black-900">
     <div v-if="error" class="text-red-500 p-8">
       {{ error }}
     </div>
@@ -49,9 +36,7 @@ function endCookingSession() {
     </div>
     <div v-else class="max-w-4xl mx-auto px-4 py-8">
       <!-- Recipe Header -->
-      <div
-        class="bg-gray-800 rounded-2xl p-8 mb-8 transform hover:scale-[1.02] transition-transform duration-300"
-      >
+      <div class="bg-gray-800 rounded-2xl p-8 mb-8">
         <div class="flex justify-between items-start mb-6">
           <h1 class="text-4xl font-bold text-white">{{ recipe.name }}</h1>
           <button
@@ -145,10 +130,9 @@ function endCookingSession() {
         </h2>
         <div class="space-y-6">
           <div
-            v-for="(instruction, index) in recipe.recipe_instructions"
+            v-for="instruction in recipe.recipe_instructions"
             :key="instruction.step_number"
             class="bg-gray-700 rounded-xl p-6 text-white transform hover:scale-[1.02] transition-transform duration-200"
-            :class="{ 'ring-2 ring-blue-500': isCookingSession && currentStep === index }"
           >
             <div class="flex items-start gap-4">
               <div
@@ -162,42 +146,15 @@ function endCookingSession() {
         </div>
       </div>
 
-      <!-- Cooking Session Controls -->
-      <div
-        v-if="isCookingSession"
-        class="fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700 p-4"
-      >
-        <div class="max-w-4xl mx-auto flex items-center justify-between">
-          <div class="flex items-center gap-4">
-            <button
-              @click="previousStep"
-              :disabled="currentStep === 0"
-              class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Previous Step
-            </button>
-            <span class="text-white">
-              Step {{ currentStep + 1 }} of {{ recipe.recipe_instructions.length }}
-            </span>
-            <button
-              @click="nextStep"
-              :disabled="currentStep === recipe.recipe_instructions.length - 1"
-              class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Next Step
-            </button>
-          </div>
-          <button
-            @click="endCookingSession"
-            class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-          >
-            End Session
-          </button>
-        </div>
-      </div>
+      <!-- Cooking Session Modal -->
+      <CookingSessionModal
+        v-if="isCookingSessionOpen && recipe"
+        :recipe="recipe"
+        @close="closeCookingSession"
+      />
 
       <!-- Start Cooking Button -->
-      <div v-if="!isCookingSession" class="fixed bottom-8 right-8">
+      <div v-if="!isCookingSessionOpen" class="fixed bottom-8 left-8">
         <button
           @click="startCookingSession"
           class="px-8 py-4 bg-blue-600 text-white rounded-full hover:bg-blue-500 transform hover:scale-105 transition-all duration-200 flex items-center gap-2 shadow-lg"
