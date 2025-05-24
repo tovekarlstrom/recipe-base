@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
-import { RouterView } from 'vue-router'
+import { RouterView, useRouter } from 'vue-router'
 import { useRecipesStore } from '@/stores/recipes'
 import ChatField from '@/components/ChatField.vue'
 import ChatBubble from '@/components/ChatBubble.vue'
@@ -8,6 +8,7 @@ import RecipeTimer from '@/components/Timer.vue'
 import { useTimerStore } from '@/stores/timer'
 import { initializeTimerStore } from '@/services/timer'
 
+const router = useRouter()
 const { prefetchRecipes } = useRecipesStore()
 const timerStore = useTimerStore()
 const isChatOpen = ref(false)
@@ -20,7 +21,12 @@ onMounted(() => {
 })
 
 onMounted(() => {
-  console.log('showTimer', timerStore.showTimer)
+  const localFirstTime = localStorage.getItem('firstTime')
+
+  if (localFirstTime !== 'false') {
+    localStorage.setItem('firstTime', 'false')
+    router.push('/onboarding')
+  }
 })
 
 // Watch for timer state changes
@@ -61,22 +67,25 @@ onMounted(async () => {
 </script>
 
 <template>
-  <RouterView />
-  <div v-if="isChatOpen" class="fixed inset-0 flex items-center justify-center z-10 bg-black/50">
-    <ChatField @closeChat="handleChatOpen" />
-  </div>
-  <div class="fixed bottom-4 right-4">
-    <ChatBubble @openChat="handleChatOpen" />
-  </div>
-  <Transition name="fade">
-    <div v-if="timerStore.showTimer" class="fixed bottom-4 left-4 z-50">
-      <RecipeTimer
-        ref="timerRef"
-        :initial-minutes="Math.floor(timerStore.timerDuration / 60)"
-        :initial-seconds="timerStore.timerDuration % 60"
-      />
+  <div>
+    <RouterView />
+
+    <div v-if="isChatOpen" class="fixed inset-0 flex items-center justify-center z-10 bg-black/50">
+      <ChatField @closeChat="handleChatOpen" />
     </div>
-  </Transition>
+    <div class="fixed bottom-4 right-4">
+      <ChatBubble @openChat="handleChatOpen" />
+    </div>
+    <Transition name="fade">
+      <div v-if="timerStore.showTimer" class="fixed bottom-4 left-4 z-50">
+        <RecipeTimer
+          ref="timerRef"
+          :initial-minutes="Math.floor(timerStore.timerDuration / 60)"
+          :initial-seconds="timerStore.timerDuration % 60"
+        />
+      </div>
+    </Transition>
+  </div>
 </template>
 
 <style>
