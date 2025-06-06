@@ -15,7 +15,7 @@ A modern web application for managing and sharing recipes, featuring AI-powered 
 - Vue 3 with TypeScript
 - Pinia for state management
 - Supabase for database and authentication
-- Google Gemini AI for chat functionality
+- OpenAI GPT-4 for chat functionality
 - Tailwind CSS for styling
 
 ## Installation
@@ -41,8 +41,8 @@ VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_KEY=your-anon-key
 DATABASE_PASSWORD=your-database-password
 
-# Google Gemini AI Configuration
-VITE_GEMINI_API_KEY=your-gemini-api-key
+# OpenAI Configuration
+VITE_OPENAI_API_KEY=your-openai-api-key
 
 # Hugging Face Configuration
 VITE_HF_ACCESS_TOKEN=your-huggingface-token

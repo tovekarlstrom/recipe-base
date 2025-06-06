@@ -1,16 +1,21 @@
-import { HfInference } from '@huggingface/inference'
+import OpenAI from 'openai'
 
-const client = new HfInference(import.meta.env.VITE_HF_ACCESS_TOKEN)
+const openai = new OpenAI({
+  apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+  dangerouslyAllowBrowser: true,
+})
 
 export async function generateEmbedding(text: string) {
   try {
-    const embeddings = await client.featureExtraction({
-      model: 'mixedbread-ai/mxbai-embed-large-v1',
-      inputs: text,
-      options: { wait_for_model: true },
+    const response = await openai.embeddings.create({
+      model: 'text-embedding-3-small',
+      input: text,
     })
-    return embeddings
+    const embedding = response.data[0].embedding
+    console.log('Generated embedding dimensions:', embedding.length)
+    return embedding
   } catch (error) {
     console.log('Error generating embeddings: ', error)
+    throw new Error('Failed to generate embedding')
   }
 }

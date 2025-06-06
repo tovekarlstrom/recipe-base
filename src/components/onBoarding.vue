@@ -3,8 +3,10 @@ import { ref, computed } from 'vue'
 import InputComponent from './InputComponent.vue'
 import OptionsComponent from '@/components/OptionsComponent.vue'
 import { useRouter } from 'vue-router'
+import { useUserPreferencesStore } from '@/stores/userPreferences'
 
 const router = useRouter()
+const userPreferencesStore = useUserPreferencesStore()
 
 const text = ref('Welcome to RecipeBase')
 const input = ref('')
@@ -58,6 +60,18 @@ const next = () => {
       isComplete.value = true
       showForm.value = false
       text.value = 'Thank you for completing the questionnaire!'
+
+      // Store user preferences
+      userPreferencesStore.setPreferences({
+        cookingExperience: userAnswers.value[0] as
+          | 'Beginner'
+          | 'Intermediate'
+          | 'Advanced'
+          | 'Professional',
+        canReadRecipes: userAnswers.value[1] === 'Yes',
+        dietaryRestrictions: userAnswers.value[2],
+      })
+
       setTimeout(redirectToHome, 3000)
     }
   }

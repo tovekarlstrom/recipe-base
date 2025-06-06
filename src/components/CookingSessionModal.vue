@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import type { Recipe } from '@/stores/recipes'
-import { aiAgent } from '@/functions/geminiAgent'
+import { useOpenAIAgent } from '@/functions/openaiAgent'
 
 const props = defineProps<{
   recipe: Recipe
@@ -19,6 +19,8 @@ const detailedSteps = ref<
     estimatedTime?: string
   }>
 >([])
+
+const { chatWithUser } = useOpenAIAgent()
 
 async function generateDetailedSteps() {
   isLoading.value = true
@@ -51,7 +53,8 @@ async function generateDetailedSteps() {
 
     IMPORTANT: Your response must be ONLY the JSON array, with no additional text or explanation. And the response must be in swedish`
 
-    const text = await aiAgent({ prompt })
+    const response = await chatWithUser(prompt)
+    const text = response.text
 
     console.log('Raw AI response:', text) // Debug log
 

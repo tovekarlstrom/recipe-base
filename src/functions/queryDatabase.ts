@@ -27,17 +27,43 @@ interface SearchResult {
 
 export async function searchRecipesByText(
   query: string,
-  matchThreshold = 0.6,
+  matchThreshold = 0.4,
   matchCount = 7,
 ): Promise<SearchResult[]> {
   try {
     console.log('Generating embedding for search query')
     // Format the search query to match how recipes are stored
-    const searchText = `Recipe: Search for ${query}\n\nDescription: Find recipes related to ${query}\n\nIngredients: ${query}`
+    const normalizedQuery = query.toLowerCase()
+    // Add variations of the search term
+    const searchVariations = [
+      normalizedQuery,
+      normalizedQuery.replace(/e$/, 'a'), // Handle common Swedish word endings
+      normalizedQuery.replace(/a$/, 'e'),
+      normalizedQuery.replace(/en$/, 'a'),
+      normalizedQuery.replace(/a$/, 'en'),
+    ].join(' ')
+
+    const searchText = [
+      `Recipe: ${searchVariations}`,
+      '',
+      `Description: ${searchVariations}`,
+      '',
+      'Servings: 4',
+      '',
+      'Ingredients:',
+      searchVariations,
+      '',
+      'Instructions:',
+      searchVariations,
+    ].join('\n')
+
+    console.log('Search text:', searchText)
     const embedding = await generateEmbedding(searchText)
 
     if (embedding && embedding.length > 0) {
       console.log('Searching for matching recipes')
+      console.log('Using match threshold:', matchThreshold)
+      console.log('Using match count:', matchCount)
       const { data, error } = await supabase.rpc('match_recipes', {
         query_embedding: embedding,
         match_threshold: matchThreshold,
@@ -48,6 +74,9 @@ export async function searchRecipesByText(
         return []
       }
       console.log('Found recipes:', data?.length || 0)
+      if (data && data.length > 0) {
+        console.log('First recipe similarity:', data[0].similarity)
+      }
       return data as SearchResult[]
     }
     return []

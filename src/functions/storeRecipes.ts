@@ -39,7 +39,7 @@ export async function uploadTextToDatabase(recipeData: RecipeData) {
           name: recipeData.name,
           description: recipeData.description,
           servings: recipeData.servings,
-          embedding: embedding,
+          new_embedding: embedding,
         },
       ])
       .select()

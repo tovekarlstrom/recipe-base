@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick } from 'vue'
 import { Icon } from '@iconify/vue'
-import { useAgent } from '@/agent'
+import { useOpenAIAgent } from '@/functions/openaiAgent'
 import type { Recipe } from '@/types/recipe'
 import router from '@/router'
 
@@ -14,7 +14,7 @@ interface Message {
 
 const emit = defineEmits(['closeChat'])
 
-const { chatWithUser } = useAgent()
+const { chatWithUser } = useOpenAIAgent()
 const messages = ref<Message[]>([])
 const userInput = ref('')
 const isLoading = ref(false)

@@ -28,7 +28,7 @@ const props = defineProps<{
       type="text"
       id="recipeName"
       class="w-full bg-gray-600 text-white rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-300"
-      placeholder="Ange receptnamn"
+      :placeholder="props.placeholder"
       required
     />
   </div>
