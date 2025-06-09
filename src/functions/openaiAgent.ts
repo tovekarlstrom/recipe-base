@@ -6,8 +6,11 @@ import { setTimer } from '@/services/timer'
 import { AGENT_PROMPTS } from '../prompts/agentPrompts'
 import { useRecipesStore } from '@/stores/recipes'
 import { useChatHistory } from './chatHistory'
-import { useUserPreferencesStore } from '@/stores/userPreferences'
-
+import { useOnboardingStore } from '@/stores/onboardingStore'
+import { useUserPreferencesStore } from '@/stores/userPreferencesStore'
+import { categorizeRecipe } from './aiSorting'
+import { storeUserInfo } from './storeRelevanceChecker'
+import { supabase } from '@/supabase/supabaseClient'
 // Initialize OpenAI
 const openai = new OpenAI({
   apiKey: import.meta.env.VITE_OPENAI_API_KEY,
@@ -15,7 +18,12 @@ const openai = new OpenAI({
 })
 
 // Type definitions
-type FunctionName = 'setTimer' | 'searchRecipe' | 'storeRecipe'
+type FunctionName =
+  | 'setTimer'
+  | 'searchRecipe'
+  | 'storeRecipe'
+  | 'categorizeRecipe'
+  | 'storeUserInfo'
 
 interface FunctionCall {
   name: FunctionName
@@ -26,16 +34,18 @@ interface FunctionCall {
       name: string
       description: string
       servings: number
-      ingredients: Array<{
+      recipe_ingredients: Array<{
         ingredient: string
         amount?: string
         unit?: string
       }>
-      instructions: Array<{
+      recipe_instructions: Array<{
         step_number: number
         instruction: string
       }>
     }
+    sortRecipe?: string[]
+    userInfo?: string
   }
 }
 
@@ -54,6 +64,7 @@ interface ChatResponse {
 
 export function useOpenAIAgent() {
   const { addMessage, getChatHistory } = useChatHistory()
+  const onboardingStore = useOnboardingStore()
   const userPreferencesStore = useUserPreferencesStore()
 
   const startTimer = async (duration: number): Promise<void> => {
@@ -73,12 +84,19 @@ export function useOpenAIAgent() {
         id: result.id,
         name: result.name,
         description: result.description || '',
-        ingredients: result.recipe_ingredients.map((ri) =>
-          `${ri.amount || ''} ${ri.unit || ''} ${ri.ingredient}`.trim(),
-        ),
-        instructions: result.recipe_instructions.map((ri) => ri.instruction),
+        servings: result.servings,
+        recipe_ingredients: result.recipe_ingredients.map((ri) => ({
+          ingredient: ri.ingredient,
+          amount: ri.amount || null,
+          unit: ri.unit || null,
+        })),
+        recipe_instructions: result.recipe_instructions.map((ri) => ({
+          step_number: ri.step_number,
+          instruction: ri.instruction,
+        })),
         created_at: result.created_at,
         updated_at: result.updated_at,
+        category: result.category || [],
       }))
     } catch (error) {
       console.error('Error searching recipes:', error)
@@ -116,16 +134,20 @@ export function useOpenAIAgent() {
               name: args.recipeData.name,
               description: args.recipeData.description,
               servings: args.recipeData.servings,
-              ingredients: args.recipeData.ingredients.map((ing) => ({
+              recipe_ingredients: args.recipeData.recipe_ingredients.map((ing) => ({
                 ingredient: ing.ingredient,
                 amount: ing.amount || '',
                 unit: ing.unit || '',
               })),
-              instructions: args.recipeData.instructions.map((inst) => ({
+              recipe_instructions: args.recipeData.recipe_instructions.map((inst) => ({
                 step_number: inst.step_number,
                 instruction: inst.instruction,
               })),
+              category: [] as string[],
             }
+            const category = await categorizeRecipe({ recipe: recipeData })
+            recipeData.category = category.category
+
             await uploadTextToDatabase(recipeData)
             recipesStore.clearRecipes()
             await recipesStore.fetchRecipes()
@@ -133,6 +155,18 @@ export function useOpenAIAgent() {
           } catch (error) {
             console.error('Error storing recipe:', error)
             return { success: false, message: 'Failed to store recipe' }
+          }
+        }
+        break
+      case 'storeUserInfo':
+        if (args.userInfo) {
+          const user = await supabase.auth.getUser()
+          if (user.data.user) {
+            // Convert the object to a string if it's not already a string
+            const userInfoString =
+              typeof args.userInfo === 'string' ? args.userInfo : JSON.stringify(args.userInfo)
+            await storeUserInfo(userInfoString, user.data.user.id)
+            return { success: true, message: 'User info stored successfully' }
           }
         }
         break
@@ -147,25 +181,81 @@ export function useOpenAIAgent() {
       // Add user message to chat history
       addMessage('user', message)
 
-      // Get user preferences
-      const preferences = userPreferencesStore.preferences
+      // Get user preferences from both stores
+      const onboardingPreferences = onboardingStore.preferences
+      const userPreferences = userPreferencesStore.preferences
       let systemPrompt = AGENT_PROMPTS.CO_CHEF
 
-      // Add user preferences to system prompt if available
-      if (preferences) {
+      // Add user profile from onboarding
+      if (onboardingPreferences) {
         systemPrompt += `\n\nUser Profile:
-- Cooking Experience: ${preferences.cookingExperience}
-- Can Read Recipes: ${preferences.canReadRecipes ? 'Yes' : 'No'}
-- Dietary Restrictions: ${preferences.dietaryRestrictions || 'None'}
+- Cooking Experience: ${onboardingPreferences.cookingExperience}
+- Can Read Recipes: ${onboardingPreferences.canReadRecipes ? 'Yes' : 'No'}
+- Initial Dietary Restrictions: ${onboardingPreferences.dietaryRestrictions || 'None'}
 
 Please adapt your responses based on this user profile.`
-        // Please adapt your responses based on these preferences:
-        // 1. Avoid suggesting recipes with disliked ingredients
-        // 2. Consider dietary restrictions and allergies when recommending recipes
-        // 3. Adjust cooking instructions based on the user's skill level
-        // 4. Prioritize recipes from favorite cuisines when relevant
-        // 5. Always mention if a recipe needs modifications to accommodate restrictions or allergies
       }
+
+      // Add user preferences from chat
+      if (userPreferences) {
+        systemPrompt += `\n\nUser Preferences:
+${userPreferences.dietary_restrictions?.length ? `- Dietary Restrictions: ${userPreferences.dietary_restrictions.join(', ')}\n` : ''}
+${userPreferences.dislikes?.length ? `- Dislikes: ${userPreferences.dislikes.join(', ')}\n` : ''}
+${userPreferences.likes?.length ? `- Likes: ${userPreferences.likes.join(', ')}\n` : ''}
+${userPreferences.equipment?.length ? `- Equipment: ${userPreferences.equipment.join(', ')}\n` : ''}
+${userPreferences.other_preferences?.length ? `- Other Preferences: ${userPreferences.other_preferences.join(', ')}\n` : ''}
+
+Please consider these preferences when suggesting recipes and providing cooking instructions.`
+      }
+
+      // Add instruction to detect and store user preferences
+      systemPrompt += `\n\nIMPORTANT: When the user mentions personal preferences, dislikes, or limitations, you MUST call the storeUserInfo function with a structured JSON object. The response MUST be in this exact format:
+
+{
+  "preferences": {
+    "equipment": ["list of equipment mentioned"],
+    "dislikes": ["list of foods or ingredients disliked"],
+    "likes": ["list of foods or cuisines liked"],
+    "dietary_restrictions": ["list of dietary restrictions or allergies"],
+    "other_preferences": ["list of other cooking preferences"]
+  }
+}
+
+Examples:
+1. User says "I don't like bananas":
+{
+  "preferences": {
+    "dislikes": ["bananas"],
+    "equipment": [],
+    "likes": [],
+    "dietary_restrictions": [],
+    "other_preferences": []
+  }
+}
+
+2. User says "I have an air fryer and I'm vegetarian":
+{
+  "preferences": {
+    "equipment": ["has air fryer"],
+    "dietary_restrictions": ["vegetarian"],
+    "dislikes": [],
+    "likes": [],
+    "other_preferences": []
+  }
+}
+
+3. User says "I love spicy food and Italian cuisine":
+{
+  "preferences": {
+    "likes": ["spicy food", "Italian cuisine"],
+    "equipment": [],
+    "dislikes": [],
+    "dietary_restrictions": [],
+    "other_preferences": []
+  }
+}
+
+Always include ALL categories in the response, even if they're empty arrays. This ensures consistent data structure.`
 
       const completion = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
@@ -232,7 +322,7 @@ Please adapt your responses based on this user profile.`
                       name: { type: 'string' },
                       description: { type: 'string' },
                       servings: { type: 'number' },
-                      ingredients: {
+                      recipe_ingredients: {
                         type: 'array',
                         items: {
                           type: 'object',
@@ -244,7 +334,7 @@ Please adapt your responses based on this user profile.`
                           required: ['ingredient'],
                         },
                       },
-                      instructions: {
+                      recipe_instructions: {
                         type: 'array',
                         items: {
                           type: 'object',
@@ -256,10 +346,35 @@ Please adapt your responses based on this user profile.`
                         },
                       },
                     },
-                    required: ['name', 'description', 'servings', 'ingredients', 'instructions'],
+                    required: [
+                      'name',
+                      'description',
+                      'servings',
+                      'recipe_ingredients',
+                      'recipe_instructions',
+                    ],
                   },
                 },
                 required: ['recipeData'],
+              },
+            },
+          },
+          {
+            type: 'function',
+            function: {
+              name: 'storeUserInfo',
+              description:
+                'stores user preferences and information about their likes, dislikes, and cooking limitations',
+              parameters: {
+                type: 'object',
+                properties: {
+                  userInfo: {
+                    type: 'string',
+                    description:
+                      'user preferences and information to store, such as food dislikes, equipment limitations, or dietary restrictions',
+                  },
+                },
+                required: ['userInfo'],
               },
             },
           },
@@ -338,30 +453,40 @@ Please adapt your responses based on this user profile.`
 
   const createRecipe = async (requirements: string): Promise<string> => {
     try {
-      const preferences = userPreferencesStore.preferences
+      const onboardingPreferences = onboardingStore.preferences
+      const userPreferences = userPreferencesStore.preferences
       let systemPrompt = AGENT_PROMPTS.RECIPE_CREATION_PROMPT
 
-      // Add user preferences to system prompt if available
-      if (preferences) {
+      // Add user profile from onboarding
+      if (onboardingPreferences) {
         systemPrompt += `\n\nUser Profile:
-- Cooking Experience: ${preferences.cookingExperience}
-- Can Read Recipes: ${preferences.canReadRecipes ? 'Yes' : 'No'}
-- Dietary Restrictions: ${preferences.dietaryRestrictions || 'None'}
+- Cooking Experience: ${onboardingPreferences.cookingExperience}
+- Can Read Recipes: ${onboardingPreferences.canReadRecipes ? 'Yes' : 'No'}
+- Initial Dietary Restrictions: ${onboardingPreferences.dietaryRestrictions || 'None'}
 
 Please adapt the recipe creation based on this user profile.`
 
-        // Add specific instructions based on user preferences
-        if (preferences.cookingExperience === 'Beginner') {
+        // Add specific instructions based on user profile
+        if (onboardingPreferences.cookingExperience === 'Beginner') {
           systemPrompt +=
             '\n- Use simple, basic cooking techniques\n- Include detailed explanations for each step\n- Avoid complex terminology'
         }
-        if (!preferences.canReadRecipes) {
+        if (!onboardingPreferences.canReadRecipes) {
           systemPrompt +=
             '\n- Provide very detailed, step-by-step instructions\n- Include visual cues and descriptions\n- Break down complex steps into smaller parts'
         }
-        if (preferences.dietaryRestrictions) {
-          systemPrompt += `\n- Ensure the recipe is compatible with these dietary restrictions: ${preferences.dietaryRestrictions}\n- Suggest appropriate substitutions if needed`
-        }
+      }
+
+      // Add user preferences from chat
+      if (userPreferences) {
+        systemPrompt += `\n\nUser Preferences:
+${userPreferences.dietary_restrictions?.length ? `- Dietary Restrictions: ${userPreferences.dietary_restrictions.join(', ')}\n` : ''}
+${userPreferences.dislikes?.length ? `- Dislikes: ${userPreferences.dislikes.join(', ')}\n` : ''}
+${userPreferences.likes?.length ? `- Likes: ${userPreferences.likes.join(', ')}\n` : ''}
+${userPreferences.equipment?.length ? `- Equipment: ${userPreferences.equipment.join(', ')}\n` : ''}
+${userPreferences.other_preferences?.length ? `- Other Preferences: ${userPreferences.other_preferences.join(', ')}\n` : ''}
+
+Please consider these preferences when creating the recipe.`
       }
 
       const completion = await openai.chat.completions.create({

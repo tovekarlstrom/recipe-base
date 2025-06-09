@@ -7,16 +7,15 @@ import ChatBubble from '@/components/ChatBubble.vue'
 import RecipeTimer from '@/components/Timer.vue'
 import { useTimerStore } from '@/stores/timer'
 import { initializeTimerStore } from '@/services/timer'
-import { useUserPreferencesStore } from '@/stores/userPreferences'
 import NavbarComponent from '@/components/NavbarComponent.vue'
 import { useAuthStore } from '@/stores/auth'
-import { supabase } from '@/supabase/supabaseClient'
+import { useUserPreferencesStore } from '@/stores/userPreferencesStore'
 
 const router = useRouter()
 const { prefetchRecipes } = useRecipesStore()
 const timerStore = useTimerStore()
-const userPreferencesStore = useUserPreferencesStore()
 const authStore = useAuthStore()
+const userPreferencesStore = useUserPreferencesStore()
 const isChatOpen = ref(false)
 const timerRef = ref<InstanceType<typeof RecipeTimer> | null>(null)
 
@@ -30,19 +29,18 @@ watch(
   },
 )
 
-onMounted(() => {
-  authStore.initAuth()
-})
+onMounted(async () => {
+  // Initialize auth state
+  await authStore.initAuth()
 
-onMounted(() => {
+  // Load user preferences if user is signed in
+  await userPreferencesStore.loadPreferences()
+
   const localFirstTime = localStorage.getItem('firstTime')
 
   if (localFirstTime !== 'false') {
     localStorage.setItem('firstTime', 'false')
     router.push('/onboarding')
-  } else {
-    // Load user preferences if they exist
-    userPreferencesStore.loadPreferences()
   }
 })
 
@@ -86,20 +84,6 @@ function handleChatOpen() {
 onMounted(async () => {
   // Start loading recipes as soon as the app mounts
   await prefetchRecipes()
-  // Load user preferences from Supabase if user is signed in
-  const user = await supabase.auth.getUser()
-  console.log('App: User:', user)
-  if (user.data.user) {
-    const { data: preferences } = await supabase
-      .from('user_preferences')
-      .select('*')
-      .eq('user_id', user.data.user.id)
-      .single()
-    console.log('App: Preferences:', preferences)
-    if (preferences) {
-      userPreferencesStore.setPreferences(preferences)
-    }
-  }
 })
 </script>
 

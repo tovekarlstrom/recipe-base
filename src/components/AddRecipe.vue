@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { uploadTextToDatabase } from '@/functions/storeRecipes'
 import { useRecipesStore } from '@/stores/recipes'
-
+import { categorizeRecipe } from '@/functions/aiSorting'
 const recipeName = ref('')
 const description = ref('')
 const servings = ref(4)
@@ -49,17 +49,25 @@ async function handleSubmit() {
 
   isSubmitting.value = true
   try {
-    await uploadTextToDatabase({
+    const recipeData = {
       name: recipeName.value,
       description: description.value,
       servings: servings.value,
-      ingredients: ingredients.value.map((i) => ({
+      recipe_ingredients: ingredients.value.map((i) => ({
         ingredient: i.ingredient,
         amount: i.amount || '',
         unit: i.unit || '',
       })),
-      instructions: instructions.value.map((i) => ({ step_number: i.step, instruction: i.text })),
-    })
+      recipe_instructions: instructions.value.map((i) => ({
+        step_number: i.step,
+        instruction: i.text,
+      })),
+      category: [] as string[],
+    }
+    const category = await categorizeRecipe({ recipe: recipeData })
+    recipeData.category = category.category
+
+    await uploadTextToDatabase(recipeData)
 
     // Clear the recipes store to force a refresh
     recipesStore.clearRecipes()

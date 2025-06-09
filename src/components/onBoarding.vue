@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import InputComponent from './InputComponent.vue'
 import OptionsComponent from '@/components/OptionsComponent.vue'
 import { useRouter } from 'vue-router'
-import { useUserPreferencesStore } from '@/stores/userPreferences'
+import { useUserPreferencesStore } from '@/stores/userPreferencesStore'
 
 const router = useRouter()
 const userPreferencesStore = useUserPreferencesStore()
@@ -62,14 +62,12 @@ const next = () => {
       text.value = 'Thank you for completing the questionnaire!'
 
       // Store user preferences
-      userPreferencesStore.setPreferences({
-        cookingExperience: userAnswers.value[0] as
-          | 'Beginner'
-          | 'Intermediate'
-          | 'Advanced'
-          | 'Professional',
-        canReadRecipes: userAnswers.value[1] === 'Yes',
-        dietaryRestrictions: userAnswers.value[2],
+      userPreferencesStore.updatePreferences({
+        dietary_restrictions: userAnswers.value[2] ? [userAnswers.value[2]] : [],
+        other_preferences: [
+          `Cooking Experience: ${userAnswers.value[0]}`,
+          `Can Read Recipes: ${userAnswers.value[1]}`,
+        ],
       })
 
       setTimeout(redirectToHome, 3000)

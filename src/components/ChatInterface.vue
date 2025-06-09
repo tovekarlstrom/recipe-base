@@ -128,8 +128,8 @@ const handleRecipeClick = async (recipe: Recipe) => {
                 {{ recipe.description }}
               </p>
               <div class="flex gap-4 text-xs text-gray-400 mt-2">
-                <span>{{ recipe.ingredients.length }} ingredienser</span>
-                <span>{{ recipe.instructions.length }} steg</span>
+                <span>{{ recipe.recipe_ingredients.length }} ingredienser</span>
+                <span>{{ recipe.recipe_instructions.length }} steg</span>
               </div>
             </div>
           </div>

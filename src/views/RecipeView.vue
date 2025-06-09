@@ -9,8 +9,9 @@ const route = useRoute()
 const router = useRouter()
 const recipeId = route.params.id
 const recipe = ref<Recipe | null>(null)
-const { getRecipe, error } = useRecipesStore()
+const { getRecipe, error, deleteRecipe } = useRecipesStore()
 const isCookingSessionOpen = ref(false)
+const isDeleting = ref(false)
 
 onMounted(async () => {
   recipe.value = await getRecipe(recipeId as string)
@@ -24,10 +25,26 @@ function startCookingSession() {
 function closeCookingSession() {
   isCookingSessionOpen.value = false
 }
+
+async function handleDeleteRecipe() {
+  console.log('deleteRecipe')
+  isDeleting.value = true
+  await deleteRecipe(recipeId as string)
+
+  setTimeout(() => {
+    router.push('/')
+    isDeleting.value = false
+  }, 1000)
+}
 </script>
 
 <template>
-  <div class="min-h-screen bg-gradient-to-b from-black-900 via-black-900/80 to-black-900">
+  <div v-if="isDeleting" class="flex flex-col items-center justify-center min-h-screen gap-4">
+    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+    <p class="text-white">Radera recept...</p>
+  </div>
+
+  <div v-else class="min-h-screen bg-gradient-to-b from-black-900 via-black-900/80 to-black-900">
     <div v-if="error" class="text-red-500 p-8">
       {{ error }}
     </div>
@@ -39,19 +56,40 @@ function closeCookingSession() {
       <div class="bg-gray-800 rounded-2xl p-8 mb-8">
         <div class="flex justify-between items-start mb-6">
           <h1 class="text-4xl font-bold text-white">{{ recipe.name }}</h1>
-          <button
-            @click="router.push('/')"
-            class="text-gray-400 hover:text-white transition-colors"
-          >
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
+          <div>
+            <button
+              @click="handleDeleteRecipe()"
+              class="text-gray-400 hover:text-white transition-colors mr-4"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
+            </button>
+            <button
+              @click="router.push('/')"
+              class="text-gray-400 hover:text-white transition-colors"
+            >
+              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
         <p v-if="recipe.description" class="text-gray-300 text-lg mb-6">
           {{ recipe.description }}

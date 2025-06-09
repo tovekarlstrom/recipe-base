@@ -3,6 +3,8 @@ import { PromptTemplate } from '@langchain/core/prompts'
 import { ChatOpenAI } from '@langchain/openai'
 import { StringOutputParser } from '@langchain/core/output_parsers'
 import { supabase } from '@/supabase/supabaseClient'
+import { JsonOutputParser } from '@langchain/core/output_parsers'
+import { useUserPreferencesStore } from '@/stores/userPreferencesStore'
 
 const llm = new ChatOpenAI({
   model: 'gpt-4o-mini',
@@ -11,6 +13,7 @@ const llm = new ChatOpenAI({
 })
 
 const outputParser = new StringOutputParser()
+const jsonParser = new JsonOutputParser()
 
 const prompt = PromptTemplate.fromTemplate(
   `
@@ -20,13 +23,29 @@ const prompt = PromptTemplate.fromTemplate(
 )
 
 const userInfoSummerizerPrompt = PromptTemplate.fromTemplate(
-  `Summera informationen i JSON format: "{input}"
-  Returnera ett JSON objekt med följande struktur:
-    "summary": "kort sammanfattning av informationen"
-  `,
+  `Analyze the following user input and extract ALL relevant preferences and information. The user might mention multiple things at once (like dislikes AND equipment limitations). Return a JSON object with the following structure:
+  {{
+    "preferences": {{
+      "equipment": ["list of ALL equipment mentioned, e.g. 'no oven', 'has air fryer'"],
+      "dislikes": ["list of ALL foods or ingredients the user dislikes"],
+      "likes": ["list of ALL foods or cuisines the user likes"],
+      "dietary_restrictions": ["list of ALL dietary restrictions or allergies"],
+      "other_preferences": ["list of ALL other cooking preferences"]
+    }}
+  }}
+
+  IMPORTANT:
+  - Extract ALL relevant information from the input, not just the first thing mentioned
+  - If the user mentions multiple things (e.g., both dislikes and equipment), include ALL of them
+  - Be thorough in capturing every preference or limitation mentioned
+  - Only include categories that are relevant to the input. If a category is not mentioned, use an empty array
+  - Be specific and concise in the lists
+  - Always return valid JSON
+
+  User input: "{input}"`,
 )
 
-const userInfoSummerizerChain = RunnableSequence.from([userInfoSummerizerPrompt, llm, outputParser])
+const userInfoSummerizerChain = RunnableSequence.from([userInfoSummerizerPrompt, llm, jsonParser])
 
 const relevanceChecker = RunnableSequence.from([prompt, llm, outputParser])
 
@@ -44,7 +63,7 @@ export async function userInfoSummerizer(input: string, userId: string) {
   console.log('userInfoSummerizer', input)
   try {
     const res = await userInfoSummerizerChain.invoke({ input })
-    return await storeUserInfo(res, userId)
+    return await storeUserInfo(JSON.stringify(res), userId)
   } catch (e) {
     console.error('Failed to parse JSON:', e)
     return null
@@ -58,18 +77,21 @@ export async function storeUserInfo(input: string, userId: string) {
     const cleanedInput = input.replace(/```json\n|\n```/g, '').trim()
     console.log('Cleaned input:', cleanedInput)
 
-    // Parse the JSON
-    const userInfo = JSON.parse(cleanedInput)
-    console.log('Parsed userInfo:', userInfo)
+    let userInfo
+    try {
+      // Parse the JSON
+      userInfo = JSON.parse(cleanedInput)
+    } catch (parseError) {
+      console.error('Failed to parse JSON:', parseError)
+      return null
+    }
 
     // Store in Supabase
     const { data, error } = await supabase
       .from('user_preferences')
       .upsert({
         user_id: userId,
-        summary: userInfo.summary,
         preferences: userInfo.preferences,
-        updated_at: new Date().toISOString(),
       })
       .select()
 
@@ -78,9 +100,13 @@ export async function storeUserInfo(input: string, userId: string) {
       return null
     }
 
+    // Update the store
+    const userPreferencesStore = useUserPreferencesStore()
+    await userPreferencesStore.updatePreferences(userInfo.preferences)
+
     return data
   } catch (e) {
-    console.error('Failed to parse JSON in storeUserInfo:', e)
+    console.error('Failed to process user info:', e)
     return null
   }
 }

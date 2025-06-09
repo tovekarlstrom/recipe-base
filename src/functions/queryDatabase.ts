@@ -1,35 +1,15 @@
 import { generateEmbedding } from './common'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '@/supabase/supabaseClient'
+import type { Recipe } from '@/types/recipe'
 // import { HfInference } from '@huggingface/inference'
 
 // const client = new HfInference(import.meta.env.VITE_HF_ACCESS_TOKEN)
-
-const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_KEY)
-
-interface SearchResult {
-  id: string
-  name: string
-  description: string | null
-  servings: number
-  created_at: string
-  updated_at: string
-  recipe_ingredients: {
-    ingredient: string
-    amount: string | null
-    unit: string | null
-  }[]
-  recipe_instructions: {
-    step_number: number
-    instruction: string
-  }[]
-  similarity: number
-}
 
 export async function searchRecipesByText(
   query: string,
   matchThreshold = 0.4,
   matchCount = 7,
-): Promise<SearchResult[]> {
+): Promise<Recipe[]> {
   try {
     console.log('Generating embedding for search query')
     // Format the search query to match how recipes are stored
@@ -77,7 +57,7 @@ export async function searchRecipesByText(
       if (data && data.length > 0) {
         console.log('First recipe similarity:', data[0].similarity)
       }
-      return data as SearchResult[]
+      return data as Recipe[]
     }
     return []
   } catch (error) {

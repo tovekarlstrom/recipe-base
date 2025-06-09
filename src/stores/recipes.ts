@@ -1,11 +1,6 @@
 import { ref, watch } from 'vue'
 import { defineStore } from 'pinia'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL as string,
-  import.meta.env.VITE_SUPABASE_KEY as string,
-)
+import { supabase } from '@/supabase/supabaseClient'
 
 export interface Recipe {
   id: string
@@ -23,6 +18,7 @@ export interface Recipe {
     step_number: number
     instruction: string
   }[]
+  category: string[]
 }
 
 export const useRecipesStore = defineStore('recipes', () => {
@@ -33,6 +29,22 @@ export const useRecipesStore = defineStore('recipes', () => {
   watch(recipes, () => {
     console.log('recipes', recipes.value)
   })
+
+  async function deleteRecipe(id: string) {
+    try {
+      const { error: deleteError } = await supabase.from('recipes').delete().eq('id', id)
+      if (deleteError) {
+        console.error('Error deleting recipe:', deleteError)
+        throw deleteError
+      }
+      // Remove the recipe from local state
+      recipes.value = recipes.value.filter((recipe) => recipe.id !== id)
+      console.log('Recipe deleted successfully')
+    } catch (error) {
+      console.error('Error in deleteRecipe:', error)
+      throw error
+    }
+  }
 
   async function fetchRecipes() {
     try {
@@ -64,7 +76,8 @@ export const useRecipesStore = defineStore('recipes', () => {
           recipe_instructions (
             step_number,
             instruction
-          )
+          ),
+          category
         `,
         )
         .order('created_at', { ascending: false })
@@ -116,5 +129,6 @@ export const useRecipesStore = defineStore('recipes', () => {
     prefetchRecipes,
     getRecipe,
     clearRecipes,
+    deleteRecipe,
   }
 })

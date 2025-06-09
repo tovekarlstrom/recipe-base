@@ -1,30 +1,26 @@
 import { generateEmbedding } from './common'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL as string,
-  import.meta.env.VITE_SUPABASE_KEY as string,
-)
+import { supabase } from '@/supabase/supabaseClient'
 
 export interface RecipeData {
   name: string
   description?: string
   servings: number
-  ingredients: {
+  recipe_ingredients: {
     ingredient: string
     amount?: string
     unit?: string
   }[]
-  instructions: {
+  recipe_instructions: {
     step_number: number
     instruction: string
   }[]
+  category?: string[]
 }
 
 export async function uploadTextToDatabase(recipeData: RecipeData) {
   try {
     // Generate embedding for the full recipe text
-    const fullText = `Recipe: ${recipeData.name}\n\nDescription: ${recipeData.description || ''}\n\nServings: ${recipeData.servings}\n\nIngredients:\n${recipeData.ingredients.map((i) => `${i.amount} ${i.unit} ${i.ingredient}`).join('\n')}\n\nInstructions:\n${recipeData.instructions.map((i) => i.instruction).join('\n')}`
+    const fullText = `Recipe: ${recipeData.name}\n\nDescription: ${recipeData.description || ''}\n\nServings: ${recipeData.servings}\n\nIngredients:\n${recipeData.recipe_ingredients.map((i) => `${i.amount} ${i.unit} ${i.ingredient}`).join('\n')}\n\nInstructions:\n${recipeData.recipe_instructions.map((i) => i.instruction).join('\n')}`
     const embedding = await generateEmbedding(fullText)
 
     if (!embedding || embedding.length === 0) {
@@ -40,6 +36,7 @@ export async function uploadTextToDatabase(recipeData: RecipeData) {
           description: recipeData.description,
           servings: recipeData.servings,
           new_embedding: embedding,
+          category: recipeData.category || [],
         },
       ])
       .select()
@@ -51,7 +48,7 @@ export async function uploadTextToDatabase(recipeData: RecipeData) {
 
     // Insert ingredients with separate amount and unit
     const { error: ingredientsError } = await supabase.from('recipe_ingredients').insert(
-      recipeData.ingredients.map((ing) => ({
+      recipeData.recipe_ingredients.map((ing) => ({
         recipe_id: recipe.id,
         ingredient: ing.ingredient,
         amount: ing.amount || null,
@@ -65,7 +62,7 @@ export async function uploadTextToDatabase(recipeData: RecipeData) {
 
     // Insert instructions
     const { error: instructionsError } = await supabase.from('recipe_instructions').insert(
-      recipeData.instructions.map((instruction, index) => ({
+      recipeData.recipe_instructions.map((instruction, index) => ({
         recipe_id: recipe.id,
         step_number: index + 1,
         instruction: instruction.instruction,

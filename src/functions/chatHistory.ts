@@ -4,7 +4,7 @@ import { AGENT_PROMPTS } from '../prompts/agentPrompts'
 
 // Initialize the chat model
 const chatModel = new ChatOpenAI({
-  modelName: 'gpt-4-turbo-preview',
+  modelName: 'gpt-4o-mini',
   temperature: 0.7,
   openAIApiKey: import.meta.env.VITE_OPENAI_API_KEY,
 })

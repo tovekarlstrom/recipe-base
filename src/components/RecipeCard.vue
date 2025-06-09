@@ -18,6 +18,7 @@ interface Props {
       step_number: number
       instruction: string
     }[]
+    category: string[]
   }
 }
 
@@ -43,7 +44,15 @@ const formattedDate = computed(() => {
     </div>
 
     <p v-if="recipe.description" class="text-gray-300 mb-4">{{ recipe.description }}</p>
-
+    <div class="flex items-center gap-2 mb-4 mt-4">
+      <span
+        v-for="category in recipe.category"
+        :key="category"
+        class="text-white border border-white rounded-md px-2 py-1"
+      >
+        {{ category }}
+      </span>
+    </div>
     <div class="flex items-center gap-2 mb-4">
       <span class="text-gray-400">Portioner:</span>
       <span class="text-white">{{ recipe.servings }}</span>
