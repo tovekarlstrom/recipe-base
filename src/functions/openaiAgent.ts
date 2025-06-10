@@ -46,6 +46,13 @@ interface FunctionCall {
     }
     sortRecipe?: string[]
     userInfo?: string
+    preferences?: {
+      equipment: string[]
+      dislikes: string[]
+      likes: string[]
+      dietary_restrictions: string[]
+      other_preferences: string[]
+    }
   }
 }
 
@@ -159,17 +166,19 @@ export function useOpenAIAgent() {
         }
         break
       case 'storeUserInfo':
-        if (args.userInfo) {
+        if (args.userInfo || args.preferences) {
           const user = await supabase.auth.getUser()
           if (user.data.user) {
             // Convert the object to a string if it's not already a string
+            const userInfo = args.userInfo || { preferences: args.preferences }
+            console.log('Storing user info:', userInfo)
             const userInfoString =
-              typeof args.userInfo === 'string' ? args.userInfo : JSON.stringify(args.userInfo)
+              typeof userInfo === 'string' ? userInfo : JSON.stringify(userInfo)
             await storeUserInfo(userInfoString, user.data.user.id)
             return { success: true, message: 'User info stored successfully' }
           }
         }
-        break
+        return { success: false, message: 'Invalid function arguments' }
     }
 
     return { success: false, message: 'Invalid function arguments' }
@@ -363,18 +372,30 @@ Always include ALL categories in the response, even if they're empty arrays. Thi
             type: 'function',
             function: {
               name: 'storeUserInfo',
-              description:
-                'stores user preferences and information about their likes, dislikes, and cooking limitations',
+              description: 'stores user preferences and information',
               parameters: {
                 type: 'object',
                 properties: {
-                  userInfo: {
-                    type: 'string',
-                    description:
-                      'user preferences and information to store, such as food dislikes, equipment limitations, or dietary restrictions',
+                  preferences: {
+                    type: 'object',
+                    description: 'user preferences and information',
+                    properties: {
+                      equipment: { type: 'array', items: { type: 'string' } },
+                      dislikes: { type: 'array', items: { type: 'string' } },
+                      likes: { type: 'array', items: { type: 'string' } },
+                      dietary_restrictions: { type: 'array', items: { type: 'string' } },
+                      other_preferences: { type: 'array', items: { type: 'string' } },
+                    },
+                    required: [
+                      'equipment',
+                      'dislikes',
+                      'likes',
+                      'dietary_restrictions',
+                      'other_preferences',
+                    ],
                   },
                 },
-                required: ['userInfo'],
+                required: ['preferences'],
               },
             },
           },
@@ -467,7 +488,7 @@ Always include ALL categories in the response, even if they're empty arrays. Thi
 Please adapt the recipe creation based on this user profile.`
 
         // Add specific instructions based on user profile
-        if (onboardingPreferences.cookingExperience === 'Beginner') {
+        if (onboardingPreferences.cookingExperience === 'Dålig') {
           systemPrompt +=
             '\n- Use simple, basic cooking techniques\n- Include detailed explanations for each step\n- Avoid complex terminology'
         }

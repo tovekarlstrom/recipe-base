@@ -41,7 +41,7 @@ async function handleDeleteRecipe() {
 <template>
   <div v-if="isDeleting" class="flex flex-col items-center justify-center min-h-screen gap-4">
     <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-    <p class="text-white">Radera recept...</p>
+    <p class="text-white">Raderar recept...</p>
   </div>
 
   <div v-else class="min-h-screen bg-gradient-to-b from-black-900 via-black-900/80 to-black-900">
@@ -133,7 +133,7 @@ async function handleDeleteRecipe() {
               d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
             />
           </svg>
-          Ingredients
+          Ingredienser
         </h2>
         <ul class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <li

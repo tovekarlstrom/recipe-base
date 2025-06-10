@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { supabase } from '@/supabase/supabaseClient'
 
 interface UserPreferences {
-  cookingExperience?: 'Beginner' | 'Intermediate' | 'Advanced' | 'Professional'
+  cookingExperience?: 'Dålig' | 'Medel' | 'Avancerad' | 'Professionell'
   canReadRecipes?: boolean
   dietaryRestrictions?: string
   equipment?: string[]

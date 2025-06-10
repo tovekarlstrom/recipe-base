@@ -13,6 +13,6 @@ async function signOut() {
 
 <template>
   <div class="flex justify-end items-center pt-4 px-4">
-    <button class="bg-blue-500 text-white px-4 py-2 rounded-md" @click="signOut">Sign Out</button>
+    <button class="bg-blue-500 text-white px-4 py-2 rounded-md" @click="signOut">Logga ut</button>
   </div>
 </template>

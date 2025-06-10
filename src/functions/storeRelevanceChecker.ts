@@ -86,13 +86,54 @@ export async function storeUserInfo(input: string, userId: string) {
       return null
     }
 
-    // Store in Supabase
+    // Get existing preferences
+    const { data: existingData } = await supabase
+      .from('user_preferences')
+      .select('preferences')
+      .eq('user_id', userId)
+      .single()
+
+    // Helper function to merge arrays and remove duplicates
+    const mergeArrays = (existing: string[] = [], newItems: string[] = []) => {
+      return [...new Set([...existing, ...newItems])]
+    }
+
+    // Merge with existing preferences if they exist
+    const mergedPreferences = existingData
+      ? {
+          ...existingData.preferences,
+          ...userInfo.preferences,
+          // Merge arrays and remove duplicates
+          equipment: mergeArrays(
+            existingData.preferences.equipment,
+            userInfo.preferences.equipment,
+          ),
+          dislikes: mergeArrays(existingData.preferences.dislikes, userInfo.preferences.dislikes),
+          likes: mergeArrays(existingData.preferences.likes, userInfo.preferences.likes),
+          dietary_restrictions: mergeArrays(
+            existingData.preferences.dietary_restrictions,
+            userInfo.preferences.dietary_restrictions,
+          ),
+          other_preferences: mergeArrays(
+            existingData.preferences.other_preferences,
+            userInfo.preferences.other_preferences,
+          ),
+        }
+      : userInfo.preferences
+
+    // Store in Supabase using upsert with conflict handling
     const { data, error } = await supabase
       .from('user_preferences')
-      .upsert({
-        user_id: userId,
-        preferences: userInfo.preferences,
-      })
+      .upsert(
+        {
+          user_id: userId,
+          preferences: mergedPreferences,
+        },
+        {
+          onConflict: 'user_preferences_user_id_key',
+          ignoreDuplicates: false,
+        },
+      )
       .select()
 
     if (error) {
@@ -102,7 +143,7 @@ export async function storeUserInfo(input: string, userId: string) {
 
     // Update the store
     const userPreferencesStore = useUserPreferencesStore()
-    await userPreferencesStore.updatePreferences(userInfo.preferences)
+    await userPreferencesStore.updatePreferences(mergedPreferences)
 
     return data
   } catch (e) {

@@ -33,14 +33,19 @@ async function signIn() {
     password: password.value,
   })
   if (signInError) {
-    error.value = signInError.message || 'An error occurred during sign in'
+    error.value = signInError.message || 'Ett fel uppstod vid inloggning'
     console.error('Error signing in:', signInError)
   } else {
-    success.value = 'Sign in successful'
+    success.value = 'Inloggning lyckades'
     setTimeout(() => {
       authStore.setAuth(true)
       success.value = ''
-      router.push('/')
+      const localFirstTime = localStorage.getItem('firstTime')
+      if (localFirstTime === null) {
+        router.push('/onboarding')
+      } else {
+        router.push('/')
+      }
     }, 3000)
   }
 }
@@ -52,15 +57,20 @@ async function signUp() {
   })
 
   if (signUpError) {
-    error.value = signUpError.message || 'An error occurred during sign up'
+    error.value = signUpError.message || 'Ett fel uppstod vid registrering'
     console.error('Error signing up:', signUpError)
   } else {
     console.log('Sign up successful:', data)
-    success.value = 'Sign up successful'
+    success.value = 'Registrering lyckades'
     setTimeout(() => {
       authStore.setAuth(true)
       success.value = ''
-      router.push('/')
+      const localFirstTime = localStorage.getItem('firstTime')
+      if (localFirstTime === null) {
+        router.push('/onboarding')
+      } else {
+        router.push('/')
+      }
     }, 3000)
   }
 }
@@ -74,16 +84,16 @@ async function signUp() {
     <div v-else class="max-w-md w-full space-y-8">
       <div>
         <h2 class="mt-6 text-center text-3xl font-extrabold text-white">
-          {{ newUser ? 'Create your account' : 'Sign in to your account' }}
+          {{ newUser ? 'Skapa ditt konto' : 'Logga in på ditt konto' }}
         </h2>
       </div>
       <form class="mt-8 space-y-6" @submit.prevent="handleSubmit">
         <div class="space-y-4">
           <div>
-            <InputComponent v-model="email" type="email" required placeholder="Email address" />
+            <InputComponent v-model="email" type="email" required placeholder="E-postadress" />
           </div>
           <div>
-            <InputComponent v-model="password" type="password" required placeholder="Password" />
+            <InputComponent v-model="password" type="password" required placeholder="Lösenord" />
           </div>
         </div>
 
@@ -96,19 +106,19 @@ async function signUp() {
             type="submit"
             class="w-full px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
           >
-            {{ newUser ? 'Sign up' : 'Sign in' }}
+            {{ newUser ? 'Skapa konto' : 'Logga in' }}
           </button>
         </div>
       </form>
 
       <div class="text-center">
         <p class="text-sm text-gray-400">
-          {{ newUser ? 'Already have an account?' : "Don't have an account?" }}
+          {{ newUser ? 'Har du redan ett konto?' : 'Har du inget konto?' }}
           <a
             @click="newUser = !newUser"
             class="font-medium text-blue-400 hover:text-blue-300 cursor-pointer transition-colors"
           >
-            {{ newUser ? 'Sign in' : 'Sign up' }}
+            {{ newUser ? 'Logga in' : 'Skapa konto' }}
           </a>
         </p>
       </div>

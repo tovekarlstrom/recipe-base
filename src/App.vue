@@ -38,8 +38,7 @@ onMounted(async () => {
 
   const localFirstTime = localStorage.getItem('firstTime')
 
-  if (localFirstTime !== 'false') {
-    localStorage.setItem('firstTime', 'false')
+  if (localFirstTime === null) {
     router.push('/onboarding')
   }
 })

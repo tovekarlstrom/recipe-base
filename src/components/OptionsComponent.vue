@@ -40,21 +40,19 @@ watch(
 </script>
 
 <template>
-  <div class="w-full max-w-md p-4">
-    <div class="flex justify-between mb-4">
-      <button
-        v-for="(option, index) in options"
-        :key="option"
-        @click="updateValue(index)"
-        :class="[
-          'px-4 py-2 rounded-lg transition-colors',
-          currentIndex === index
-            ? 'bg-blue-500 text-white'
-            : 'bg-gray-600 text-gray-300 hover:bg-gray-500',
-        ]"
-      >
-        {{ option }}
-      </button>
-    </div>
+  <div class="flex justify-center mb-4 gap-4 w-full">
+    <button
+      v-for="(option, index) in options"
+      :key="option"
+      @click="updateValue(index)"
+      :class="[
+        'px-4 py-2 rounded-lg transition-colors',
+        currentIndex === index
+          ? 'bg-blue-500 text-white'
+          : 'bg-gray-600 text-gray-300 hover:bg-gray-500',
+      ]"
+    >
+      {{ option }}
+    </button>
   </div>
 </template>
