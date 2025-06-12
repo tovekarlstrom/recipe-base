@@ -12,18 +12,22 @@ const error = ref('')
 const success = ref('')
 const router = useRouter()
 const authStore = useAuthStore()
+const isLoading = ref(false)
 
 async function handleSubmit() {
   console.log('handleSubmit')
+  isLoading.value = true
   try {
     if (newUser.value) {
-      signUp()
+      await signUp()
     } else {
-      signIn()
+      await signIn()
     }
   } catch (e) {
     error.value = 'Failed to sign in'
     console.error('Failed to sign in:', e)
+  } finally {
+    isLoading.value = false
   }
 }
 
@@ -61,7 +65,8 @@ async function signUp() {
     console.error('Error signing up:', signUpError)
   } else {
     console.log('Sign up successful:', data)
-    success.value = 'Registrering lyckades'
+    success.value =
+      'Registrering lyckades! <b>Viktigt:</b> Kontrollera din e-post för att verifiera ditt konto. Kolla även skräpposten. När du har verifierat ditt konto kan du logga in.'
     setTimeout(() => {
       authStore.setAuth(true)
       success.value = ''
@@ -79,7 +84,7 @@ async function signUp() {
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-900 pb-12 px-4 sm:px-6 lg:px-8">
     <div v-if="success" class="text-green-400 text-sm text-center">
-      {{ success }}
+      <span v-html="success" />
     </div>
     <div v-else class="max-w-md w-full space-y-8">
       <div>
@@ -104,8 +109,10 @@ async function signUp() {
         <div>
           <button
             type="submit"
-            class="w-full px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+            class="w-full px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center"
+            :disabled="isLoading"
           >
+            <span v-if="isLoading" class="loader mr-2"></span>
             {{ newUser ? 'Skapa konto' : 'Logga in' }}
           </button>
         </div>
@@ -125,3 +132,23 @@ async function signUp() {
     </div>
   </div>
 </template>
+
+<style scoped>
+.loader {
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #3498db;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+</style>
