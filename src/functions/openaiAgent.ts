@@ -218,53 +218,23 @@ Please consider these preferences when suggesting recipes and providing cooking 
       }
 
       // Add instruction to detect and store user preferences
-      systemPrompt += `\n\nIMPORTANT: When the user mentions personal preferences, dislikes, or limitations, you MUST call the storeUserInfo function with a structured JSON object. The response MUST be in this exact format:
+      systemPrompt += `\n\nVIKTIGT: När användaren nämner personliga preferenser, ogillar eller begränsningar, MÅSTE du anropa storeUserInfo-funktionen med ett strukturerat JSON-objekt. Svaret MÅSTE vara i exakt detta format:
 
 {
   "preferences": {
-    "equipment": ["list of equipment mentioned"],
-    "dislikes": ["list of foods or ingredients disliked"],
-    "likes": ["list of foods or cuisines liked"],
-    "dietary_restrictions": ["list of dietary restrictions or allergies"],
-    "other_preferences": ["list of other cooking preferences"]
+    "equipment": ["lista med utrustning"],
+    "dislikes": ["lista med mat eller ingredienser som ogillas"],
+    "likes": ["lista med mat eller kök som gillas"],
+    "dietary_restrictions": ["lista med kostrestriktioner eller allergier"],
+    "other_preferences": ["lista med andra matlagningspreferenser"]
   }
 }
 
-Examples:
-1. User says "I don't like bananas":
-{
-  "preferences": {
-    "dislikes": ["bananas"],
-    "equipment": [],
-    "likes": [],
-    "dietary_restrictions": [],
-    "other_preferences": []
-  }
-}
-
-2. User says "I have an air fryer and I'm vegetarian":
-{
-  "preferences": {
-    "equipment": ["has air fryer"],
-    "dietary_restrictions": ["vegetarian"],
-    "dislikes": [],
-    "likes": [],
-    "other_preferences": []
-  }
-}
-
-3. User says "I love spicy food and Italian cuisine":
-{
-  "preferences": {
-    "likes": ["spicy food", "Italian cuisine"],
-    "equipment": [],
-    "dislikes": [],
-    "dietary_restrictions": [],
-    "other_preferences": []
-  }
-}
-
-Always include ALL categories in the response, even if they're empty arrays. This ensures consistent data structure.`
+VIKTIGT:
+- Lägg ENDAST till utrustningsbegränsningar/utrustningstillgångar i equipment-listan när användaren EXPLICIT nämner att de inte har eller har något
+- Om användaren säger att de INTE har något, lägg till det som 'ingen X' i equipment-listan (t.ex. 'ingen ugn' om de säger "jag har ingen ugn")
+- Använd alltid svenska ord i listorna
+- Inkludera ALLA kategorier i svaret, även om de är tomma arrays`
 
       const completion = await openai.chat.completions.create({
         model: 'gpt-4o-mini',

@@ -23,26 +23,62 @@ const prompt = PromptTemplate.fromTemplate(
 )
 
 const userInfoSummerizerPrompt = PromptTemplate.fromTemplate(
-  `Analyze the following user input and extract ALL relevant preferences and information. The user might mention multiple things at once (like dislikes AND equipment limitations). Return a JSON object with the following structure:
+  `Analysera följande användarinput och extrahera ALL relevant information och preferenser. Användaren kan nämna flera saker samtidigt (som både preferenser och utrustningsbegränsningar). Returnera ett JSON-objekt med följande struktur:
   {{
     "preferences": {{
-      "equipment": ["list of ALL equipment mentioned, e.g. 'no oven', 'has air fryer'"],
-      "dislikes": ["list of ALL foods or ingredients the user dislikes"],
-      "likes": ["list of ALL foods or cuisines the user likes"],
-      "dietary_restrictions": ["list of ALL dietary restrictions or allergies"],
-      "other_preferences": ["list of ALL other cooking preferences"]
+      "equipment": ["lista med ALL utrustning som nämns. Om användaren säger att de INTE har något, MÅSTE du lägga till det som 'ingen X'. T.ex. om användaren säger 'jag har ingen ugn', lägg till 'ingen ugn'"],
+      "dislikes": ["lista med ALL mat eller ingredienser som användaren ogillar. Använd alltid svenska ord, t.ex. 'banan' istället för 'banana'"],
+      "likes": ["lista med ALL mat eller kök som användaren gillar"],
+      "dietary_restrictions": ["lista med ALL kostrestriktioner eller allergier"],
+      "other_preferences": ["lista med ALL andra matlagningspreferenser"]
     }}
   }}
 
-  IMPORTANT:
-  - Extract ALL relevant information from the input, not just the first thing mentioned
-  - If the user mentions multiple things (e.g., both dislikes and equipment), include ALL of them
-  - Be thorough in capturing every preference or limitation mentioned
-  - Only include categories that are relevant to the input. If a category is not mentioned, use an empty array
-  - Be specific and concise in the lists
-  - Always return valid JSON
+  VIKTIGT:
+  - Extrahera ALL relevant information från inputen, inte bara det första som nämns
+  - Om användaren nämner flera saker (t.ex. både ogillar och utrustning), inkludera ALLA
+  - Var noggrann med att fånga varje preferens eller begränsning som nämns
+  - Inkludera endast kategorier som är relevanta för inputen. Om en kategori inte nämns, använd en tom array
+  - Var specifik och koncis i listorna
+  - Använd alltid svenska ord i listorna
+  - För utrustning: om användaren säger att de INTE har något, MÅSTE du lägga till det som 'ingen X'
+  - Returnera alltid giltig JSON
 
-  User input: "{input}"`,
+  Exempel:
+  1. Input: "Jag har ingen ugn men har en luftfritös"
+  Output: {{
+    "preferences": {{
+      "equipment": ["ingen ugn", "har luftfritös"],
+      "dislikes": [],
+      "likes": [],
+      "dietary_restrictions": [],
+      "other_preferences": []
+    }}
+  }}
+
+  2. Input: "jag har ingen ugn"
+  Output: {{
+    "preferences": {{
+      "equipment": ["ingen ugn"],
+      "dislikes": [],
+      "likes": [],
+      "dietary_restrictions": [],
+      "other_preferences": []
+    }}
+  }}
+
+  3. Input: "jag gillar inte banan"
+  Output: {{
+    "preferences": {{
+      "equipment": [],
+      "dislikes": ["banan"],
+      "likes": [],
+      "dietary_restrictions": [],
+      "other_preferences": []
+    }}
+  }}
+
+  Användarinput: "{input}"`,
 )
 
 const userInfoSummerizerChain = RunnableSequence.from([userInfoSummerizerPrompt, llm, jsonParser])
@@ -60,12 +96,35 @@ export async function storeRelevanceChecker(input: string, userId: string) {
 }
 
 export async function userInfoSummerizer(input: string, userId: string) {
-  console.log('userInfoSummerizer', input)
+  console.log('userInfoSummerizer input:', input)
   try {
     const res = await userInfoSummerizerChain.invoke({ input })
+    console.log('LangChain output:', res)
+
+    // Validate the structure of the output
+    if (!res || typeof res !== 'object' || !res.preferences) {
+      console.error('Invalid output structure from LangChain:', res)
+      return null
+    }
+
+    // Validate that all required arrays exist
+    const requiredArrays = [
+      'equipment',
+      'dislikes',
+      'likes',
+      'dietary_restrictions',
+      'other_preferences',
+    ]
+    for (const key of requiredArrays) {
+      if (!Array.isArray(res.preferences[key])) {
+        console.error(`Missing or invalid array for ${key}:`, res.preferences[key])
+        res.preferences[key] = []
+      }
+    }
+
     return await storeUserInfo(JSON.stringify(res), userId)
   } catch (e) {
-    console.error('Failed to parse JSON:', e)
+    console.error('Failed in userInfoSummerizer:', e)
     return null
   }
 }
@@ -81,59 +140,60 @@ export async function storeUserInfo(input: string, userId: string) {
     try {
       // Parse the JSON
       userInfo = JSON.parse(cleanedInput)
+      console.log('Parsed userInfo:', userInfo)
     } catch (parseError) {
       console.error('Failed to parse JSON:', parseError)
       return null
     }
 
+    // Validate the structure
+    if (!userInfo || !userInfo.preferences) {
+      console.error('Invalid userInfo structure:', userInfo)
+      return null
+    }
+
     // Get existing preferences
-    const { data: existingData } = await supabase
-      .from('user_preferences')
-      .select('preferences')
+    const { data: existingData, error: fetchError } = await supabase
+      .from('user_preferences_v2')
+      .select('*')
       .eq('user_id', userId)
       .single()
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      // PGRST116 is "no rows returned"
+      console.error('Error fetching existing preferences:', fetchError)
+      return null
+    }
+
+    console.log('Existing preferences:', existingData)
 
     // Helper function to merge arrays and remove duplicates
     const mergeArrays = (existing: string[] = [], newItems: string[] = []) => {
       return [...new Set([...existing, ...newItems])]
     }
 
-    // Merge with existing preferences if they exist
-    const mergedPreferences = existingData
-      ? {
-          ...existingData.preferences,
-          ...userInfo.preferences,
-          // Merge arrays and remove duplicates
-          equipment: mergeArrays(
-            existingData.preferences.equipment,
-            userInfo.preferences.equipment,
-          ),
-          dislikes: mergeArrays(existingData.preferences.dislikes, userInfo.preferences.dislikes),
-          likes: mergeArrays(existingData.preferences.likes, userInfo.preferences.likes),
-          dietary_restrictions: mergeArrays(
-            existingData.preferences.dietary_restrictions,
-            userInfo.preferences.dietary_restrictions,
-          ),
-          other_preferences: mergeArrays(
-            existingData.preferences.other_preferences,
-            userInfo.preferences.other_preferences,
-          ),
-        }
-      : userInfo.preferences
+    // Prepare the data for upsert
+    const preferencesData = {
+      user_id: userId,
+      equipment: mergeArrays(existingData?.equipment || [], userInfo.preferences.equipment || []),
+      dislikes: mergeArrays(existingData?.dislikes || [], userInfo.preferences.dislikes || []),
+      likes: mergeArrays(existingData?.likes || [], userInfo.preferences.likes || []),
+      dietary_restrictions: mergeArrays(
+        existingData?.dietary_restrictions || [],
+        userInfo.preferences.dietary_restrictions || [],
+      ),
+      other_preferences: mergeArrays(
+        existingData?.other_preferences || [],
+        userInfo.preferences.other_preferences || [],
+      ),
+    }
 
-    // Store in Supabase using upsert with conflict handling
+    console.log('Merged preferences:', preferencesData)
+
+    // Store in Supabase using upsert
     const { data, error } = await supabase
-      .from('user_preferences')
-      .upsert(
-        {
-          user_id: userId,
-          preferences: mergedPreferences,
-        },
-        {
-          onConflict: 'user_preferences_user_id_key',
-          ignoreDuplicates: false,
-        },
-      )
+      .from('user_preferences_v2')
+      .upsert(preferencesData)
       .select()
 
     if (error) {
@@ -141,9 +201,17 @@ export async function storeUserInfo(input: string, userId: string) {
       return null
     }
 
+    console.log('Successfully stored preferences:', data)
+
     // Update the store
     const userPreferencesStore = useUserPreferencesStore()
-    await userPreferencesStore.updatePreferences(mergedPreferences)
+    await userPreferencesStore.updatePreferences({
+      equipment: preferencesData.equipment,
+      dislikes: preferencesData.dislikes,
+      likes: preferencesData.likes,
+      dietary_restrictions: preferencesData.dietary_restrictions,
+      other_preferences: preferencesData.other_preferences,
+    })
 
     return data
   } catch (e) {

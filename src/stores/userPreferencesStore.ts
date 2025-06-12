@@ -20,8 +20,8 @@ export const useUserPreferencesStore = defineStore('userPreferences', {
         const user = await supabase.auth.getUser()
         if (user.data.user) {
           const { data: preferences, error } = await supabase
-            .from('user_preferences')
-            .select('preferences')
+            .from('user_preferences_v2')
+            .select('*')
             .eq('user_id', user.data.user.id)
             .single()
 
@@ -31,7 +31,13 @@ export const useUserPreferencesStore = defineStore('userPreferences', {
           }
 
           if (preferences) {
-            this.preferences = preferences.preferences
+            this.preferences = {
+              equipment: preferences.equipment || [],
+              dislikes: preferences.dislikes || [],
+              likes: preferences.likes || [],
+              dietary_restrictions: preferences.dietary_restrictions || [],
+              other_preferences: preferences.other_preferences || [],
+            }
           }
         }
       } catch (err) {
@@ -54,9 +60,13 @@ export const useUserPreferencesStore = defineStore('userPreferences', {
         this.preferences = mergedPreferences
 
         // Update in Supabase
-        const { error } = await supabase.from('user_preferences').upsert({
+        const { error } = await supabase.from('user_preferences_v2').upsert({
           user_id: user.data.user.id,
-          preferences: mergedPreferences,
+          equipment: mergedPreferences.equipment || [],
+          dislikes: mergedPreferences.dislikes || [],
+          likes: mergedPreferences.likes || [],
+          dietary_restrictions: mergedPreferences.dietary_restrictions || [],
+          other_preferences: mergedPreferences.other_preferences || [],
         })
 
         if (error) {
