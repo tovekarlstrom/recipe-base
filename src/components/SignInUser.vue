@@ -65,8 +65,7 @@ async function signUp() {
     console.error('Error signing up:', signUpError)
   } else {
     console.log('Sign up successful:', data)
-    success.value =
-      'Registrering lyckades! <b>Viktigt:</b> Kontrollera din e-post för att verifiera ditt konto.När du har verifierat ditt konto kan du logga in.'
+    success.value = 'Registrering lyckades!'
     setTimeout(() => {
       authStore.setAuth(true)
       success.value = ''
@@ -76,7 +75,7 @@ async function signUp() {
       } else {
         router.push('/')
       }
-    }, 5000)
+    }, 3000)
   }
 }
 </script>
@@ -91,6 +90,10 @@ async function signUp() {
         <h2 class="mt-6 text-center text-3xl font-extrabold text-white">
           {{ newUser ? 'Skapa ditt konto' : 'Logga in på ditt konto' }}
         </h2>
+        <p v-if="newUser" class="text-sm text-gray-400 pt-4 text-center">
+          <b>Viktigt:</b> Kontrollera din e-post efter lyckad registrering för att verifiera ditt
+          konto. När du har verifierat ditt konto kan du logga in.
+        </p>
       </div>
       <form class="mt-8 space-y-6" @submit.prevent="handleSubmit">
         <div class="space-y-4">

@@ -202,7 +202,7 @@ export function useOpenAIAgent() {
 - Can Read Recipes: ${onboardingPreferences.canReadRecipes ? 'Yes' : 'No'}
 - Initial Dietary Restrictions: ${onboardingPreferences.dietaryRestrictions || 'None'}
 
-Please adapt your responses based on this user profile.`
+Use the dietary restrictions as restrictions and not as likes if the user has not specified otherwise. Please adapt your responses based on this user profile.`
       }
 
       // Add user preferences from chat

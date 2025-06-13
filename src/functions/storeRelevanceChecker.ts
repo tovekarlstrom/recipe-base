@@ -67,11 +67,11 @@ const userInfoSummerizerPrompt = PromptTemplate.fromTemplate(
     }}
   }}
 
-  3. Input: "jag gillar inte banan"
+  3. Input: "jag gillar inte papaya"
   Output: {{
     "preferences": {{
       "equipment": [],
-      "dislikes": ["banan"],
+      "dislikes": ["papaya"],
       "likes": [],
       "dietary_restrictions": [],
       "other_preferences": []
