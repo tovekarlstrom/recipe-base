@@ -66,7 +66,7 @@ async function signUp() {
   } else {
     console.log('Sign up successful:', data)
     success.value =
-      'Registrering lyckades! <b>Viktigt:</b> Kontrollera din e-post för att verifiera ditt konto. Kolla även skräpposten. När du har verifierat ditt konto kan du logga in.'
+      'Registrering lyckades! <b>Viktigt:</b> Kontrollera din e-post för att verifiera ditt konto.När du har verifierat ditt konto kan du logga in.'
     setTimeout(() => {
       authStore.setAuth(true)
       success.value = ''
@@ -76,14 +76,14 @@ async function signUp() {
       } else {
         router.push('/')
       }
-    }, 3000)
+    }, 5000)
   }
 }
 </script>
 
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-900 pb-12 px-4 sm:px-6 lg:px-8">
-    <div v-if="success" class="text-green-400 text-sm text-center">
+    <div v-if="success" class="text-green-400 text-lg text-center">
       <span v-html="success" />
     </div>
     <div v-else class="max-w-md w-full space-y-8">
