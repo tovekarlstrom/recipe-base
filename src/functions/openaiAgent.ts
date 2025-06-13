@@ -234,7 +234,9 @@ VIKTIGT:
 - Lägg ENDAST till utrustningsbegränsningar/utrustningstillgångar i equipment-listan när användaren EXPLICIT nämner att de inte har eller har något
 - Om användaren säger att de INTE har något, lägg till det som 'ingen X' i equipment-listan (t.ex. 'ingen ugn' om de säger "jag har ingen ugn")
 - Använd alltid svenska ord i listorna
-- Inkludera ALLA kategorier i svaret, även om de är tomma arrays`
+- Inkludera ALLA kategorier i svaret, även om de är tomma arrays
+- När användaren uttrycker att de gillar eller älskar något (t.ex. "jag älskar kladdkaka" eller "jag gillar kladdkaka"), lägg till det i likes-listan
+- Om användaren frågar efter ett specifikt recept eller vill söka efter något, använd searchRecipe-funktionen istället för att lagra det som en preferens`
 
       const completion = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
@@ -481,7 +483,7 @@ Please consider these preferences when creating the recipe.`
       }
 
       const completion = await openai.chat.completions.create({
-        model: 'gpt-4-turbo-preview',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
